@@ -4,7 +4,6 @@ import numpy as np
 
 # Plotly
 import plotly.express as px
-import plotly.graph_objects as go
 
 # Dash
 from dash import Dash, dcc, html, Input, Output, ctx
@@ -181,7 +180,6 @@ app.layout = html.Div(
         ]
     ),
     ]
-
 )
 
 
@@ -200,7 +198,7 @@ app.layout = html.Div(
 )
 def update_output_div(city, accesibility_means, clicked_neighborhoods):
     triggered_input = ctx.triggered_id
-    if triggered_input == constants.SCATTER_ID:
+    if (triggered_input == constants.SCATTER_ID or triggered_input == constants.ACCESIBILITY_SELECTOR):
         neighborhood =  clicked_neighborhoods['points'][0]['hovertext']
     else:
         neighborhood = None
