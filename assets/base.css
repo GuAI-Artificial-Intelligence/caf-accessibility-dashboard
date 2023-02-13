@@ -62,11 +62,15 @@ p {
 }
 
 #my-city-selector {
+    margin-bottom: 12px;
+}
+
+/* #my-city-selector {
     font-weight: 400;
     font-size: 14px;
     line-height: 16px;
     color: rgb(214, 214, 214) !important;
-}
+} */
 
 .Select-control {
     background-color: rgb(30, 30, 30) !important;

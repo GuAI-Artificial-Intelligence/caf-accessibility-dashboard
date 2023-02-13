@@ -1,47 +1,49 @@
-# Python 
-import random
-
 # Data Analysis
 import pandas as pd
+import numpy as np
 
 # Plotly
 import plotly.express as px
+import plotly.graph_objects as go
 
 # Dash
-from dash import Dash, dcc, html, Input, Output
+from dash import Dash, dcc, html, Input, Output, ctx
 
 # Bootstrap
 import dash_bootstrap_components as dbc
 
 # Local
-from constants import CENTER_CITY_COORDINATES
+import constants
 
 # Credentials
 from conf.credentials import MAPBOX_TOKEN
 
 dataset = pd.read_csv("data/test_bogota_cuenca_data.csv")
-df = px.data.gapminder()
-df['x'] = [random.randint(0, 100) for i in range(df.shape[0])]
-df['y'] = [random.uniform(1.5, 1.9) for i in range(df.shape[0])]
 
-def get_selector_graph():
+dataset_neighborhoods = pd.read_csv(
+    "data/test_bogota_cuenca_neighborhoods_data.csv")
+
+
+def get_selector_graph(city, accesibility_means):
+
     fig = px.scatter(
-        df.query("year==2007"),
-        x="x",
-        y="y",
-        size="x",
-        color="x",
-        hover_name="country",
-        log_x=True,
-        size_max=50,
+        dataset_neighborhoods[dataset_neighborhoods.city == city],
+        x=constants.ACCESIBILITY_MEANS[accesibility_means],
+        y="population",
+        size="population",
+        color=constants.ACCESIBILITY_MEANS[accesibility_means],
+        hover_name="neighborhood",
+        log_x=False,
+        size_max=20,
         height=250,
     )
+
     fig.update_yaxes(visible=False, showticklabels=False)
     fig.update_xaxes(visible=False, showticklabels=False)
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
     fig.update_layout(showlegend=False)
     fig.update_layout(plot_bgcolor="#343332")
-    fig.update_traces(marker_sizemin=5, selector=dict(type='scatter'))
+    fig.update_traces(marker_sizemin=3, selector=dict(type='scatter'))
 
     fig.update_coloraxes(colorbar_orientation='h')
     fig.update_coloraxes(colorbar_thickness=10)
@@ -54,24 +56,30 @@ def get_selector_graph():
     return fig
 
 
-def centered_map(city):
-    lat = CENTER_CITY_COORDINATES[city]['center_lat']
-    lon = CENTER_CITY_COORDINATES[city]['center_lon']
+def get_centered_map(city, accesibility_means, neighborhood):
+    
+    if neighborhood is None:
+        lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
+        lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
+        zoom = 10
+    else:
+        lat = dataset_neighborhoods[dataset_neighborhoods.neighborhood==neighborhood].latitude.values[0]
+        lon = dataset_neighborhoods[dataset_neighborhoods.neighborhood==neighborhood].longitude.values[0]
+        zoom = 12
+
     fig = px.density_mapbox(
         dataset,
         lat="latitude",
         lon="longitude",
-        z='Accesibilidad',
+        z=constants.ACCESIBILITY_MEANS[accesibility_means],
         radius=10,
         hover_name="city",
-        hover_data=["city", "Accesibilidad"],
-        # color_discrete_sequence=["fuchsia"],
+        hover_data=["city", "accessibility_foot"],
         center=dict(lat=lat, lon=lon),
-        zoom=10,
+        zoom=zoom,
         opacity=1,
         mapbox_style="carto-darkmatter",
         # mapbox_style="open-street-map",
-
 
     )
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
@@ -87,7 +95,9 @@ def centered_map(city):
     return fig
 
 
-fig = centered_map('Bogotá')
+fig = get_centered_map(list(constants.CENTER_CITY_COORDINATES.keys())[
+                       0], list(constants.ACCESIBILITY_MEANS.keys())[0],
+                       None)
 
 # Create a Dash app
 app = Dash(
@@ -95,13 +105,12 @@ app = Dash(
 )
 
 app.layout = html.Div(
-    dbc.Row(
+    [dbc.Row(
         children=[
             dbc.Col(
                 width=4,
                 className='panel-control-container',
                 children=[
-                    # dbc.Card(
                     html.Div(
                         children=[
                             html.H5("Accesibilidad",
@@ -111,20 +120,23 @@ app.layout = html.Div(
                                 "up the bulk of the card's content.",
                                 className="card-text",
                             ),
+                            html.H6('Ciudad'),
                             dcc.Dropdown(
-                                options=['Bogotá', 'Cuenca'],
-                                value='Bogotá',
-                                id='my-city-selector',
+                                options=list(constants.CENTER_CITY_COORDINATES.keys()),
+                                value=list(constants.CENTER_CITY_COORDINATES.keys())[0],
+                                id=constants.CITY_SELECTOR,
                                 clearable=False
                             ),
-                            # dbc.CardLink("Card link", href="#"),
-                            # dbc.CardLink("External link",
-                            #              href="https://google.com"),
+                            html.H6('Medio de acceso'),
+                            dcc.Dropdown(
+                                options=list(constants.ACCESIBILITY_MEANS.keys()),
+                                value=list(constants.ACCESIBILITY_MEANS.keys())[0],
+                                id=constants.ACCESIBILITY_SELECTOR,
+                                clearable=False
+                            ),
                         ],
                         className='panel-control-content'
                     ),
-                    # ),
-
                 ]
             ),
             dbc.Col(
@@ -141,7 +153,7 @@ app.layout = html.Div(
                                         config={
                                             'displayModeBar': False
                                         },
-                                        id="my-map"
+                                        id=constants.MAP_ID
                                     )
                                 ],
                                 className='map-content'
@@ -150,73 +162,52 @@ app.layout = html.Div(
                     ),
                     dbc.Row(
                         [html.P("Seleccione un punto de la gráfica para ver los datos de una localidad.", className='graph-selector-text'),
-                        dcc.Graph(
-                            figure=get_selector_graph(),
+                         dcc.Graph(
+                            id=constants.SCATTER_ID,
+                            figure=get_selector_graph(
+                                list(constants.CENTER_CITY_COORDINATES.keys())[0],
+                                list(constants.ACCESIBILITY_MEANS.keys())[0]
+                            ),
                             config={
                                 'displayModeBar': False
                             },
                             style={"height": "100%",
                                    "width": "100%"},
                         )],
-                        # children=[
-                        # px.scatter(
-                        #     df.query("year==2007"),
-                        #     x="gdpPercap",
-                        #     y="lifeExp",
-                        #     size="pop",
-                        #     color="continent",
-                        #     hover_name="country",
-                        #     log_x=True,
-                        #     size_max=60
-                        # )
-                        # ]df = px.data.gapminder()
                     ),
                 ],
-
                 className='map-container'
             ),
         ]
-    )
+    ),
+    ]
 
 )
-# app.layout = html.Div(
-#     style={"height": "100vh", "width": "100vw"},
-#     children=[
-#         dcc.Graph(
-#             figure=fig,
-#             style={"height": "100vh", "width": "100vw"},
-#             config={
-#                 'displayModeBar': False
-#             },
-#             id="my-map"
-#         ),
-#         html.Div(
-
-#             html.Div(
-#                 children=[
-#                     html.H3('Ciudades'),
-#                     dcc.RadioItems(
-#                         options=['Bogotá', 'Cuenca'],
-#                         value='Bogotá',
-#                         id='my-city-selector'
-#                     ),
-#                 ],
-#                 className='control-panel-content'
-#             ),
-#             className='control-panel',
-#         )
-#     ]
-# )
 
 
 @ app.callback(
-    Output(component_id='my-map', component_property='figure'),
-    Input(component_id='my-city-selector', component_property='value')
+    [
+        Output(component_id=constants.MAP_ID, component_property='figure'),
+        Output(component_id=constants.SCATTER_ID, component_property='figure')
+    ],
+    [
+        Input(component_id=constants.CITY_SELECTOR, component_property='value'),
+        Input(component_id=constants.ACCESIBILITY_SELECTOR,
+              component_property='value'),
+        Input(component_id=constants.SCATTER_ID,
+              component_property='hoverData'),
+    ]
 )
-def update_output_div(input_value):
-    return centered_map(input_value)
+def update_output_div(city, accesibility_means, clicked_neighborhoods):
+    triggered_input = ctx.triggered_id
+    if triggered_input == constants.SCATTER_ID:
+        neighborhood =  clicked_neighborhoods['points'][0]['hovertext']
+    else:
+        neighborhood = None
+    return get_centered_map(city, accesibility_means, neighborhood), get_selector_graph(city, accesibility_means)
 
 
 # Run the app
 if __name__ == '__main__':
     app.run_server(debug=True)
+
