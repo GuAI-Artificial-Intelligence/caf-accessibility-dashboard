@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from ..constants import CENTER_CITY_COORDINATES
+from constants import CENTER_CITY_COORDINATES
 
 # Define the center latitude and longitude for Bogota
 center_lat = 4.7110
@@ -13,11 +13,11 @@ def gen_random_points(center_lat, center_lon, city):
     longitude = np.random.normal(center_lon, 0.1, 1000)
 
     # Generate 1000 random population values
-    population = np.random.randint(10, 10000, 1000)
+    accessibility = np.random.randint(0, 100, 1000)
 
     # Create a Pandas DataFrame with the data
     df = pd.DataFrame(
-        {"population": population, "latitude": latitude, "longitude": longitude})
+        {"Accesibilidad": accessibility, "latitude": latitude, "longitude": longitude})
     df['city'] = city
     
     return df

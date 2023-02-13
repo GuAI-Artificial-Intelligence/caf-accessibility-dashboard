@@ -1,12 +1,115 @@
 body {
     margin: 0;
+    font-family: 'Open Sans', ;
+    color: #323232;
+    background-color: rgb(244, 244, 244);
+    margin: 0px;
+    padding: 0px;
+}
+
+p {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 16px; 
+}
+
+.panel-control-container {
+    height: calc(100vh);
+    padding: 0px;
+    background-color: rgb(30, 30, 30);
+    /* margin-top: 36px;
+    margin-left: 50px; */
+}
+
+.panel-control-content {
+    /* height: calc(100vh); */
+    width: calc(70%);
+    margin-left: 42px !important;
+    margin-top: 36px !important;
+    padding: 0px !important;
+    /* box-shadow: 2px 2px 2px lightgrey; */
+    /* background-color: #f9f9f9; */
+    /* border-radius: 5px; */
+    border: none;
+    background-color: rgb(30, 30, 30);
+    color: rgb(214, 214, 214);
+}
+
+.map-container {
+    padding: 0px;
+    background-color: rgb(52,51,50)
+    /* margin-top: 36px;
+    margin-left: 16px; */
+}
+
+.map-content {
+    height: calc(60vh);
+    width: calc(100%);
+    /* margin-left: 10px !important; */
+    /* padding: 0px !important; */
+    /* box-shadow: 2px 2px 2px lightgrey;  */
+    /* border-radius: 5px; */
+    border: none;
+}
+
+.card-title {
+    margin: 12px 0px;
+    font-size: 20px;
+    font-weight: bold;
+}
+.card-body {
+    padding: 0px;
+}
+
+#my-city-selector {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 16px;
+    color: rgb(214, 214, 214) !important;
+}
+
+.Select-control {
+    background-color: rgb(30, 30, 30) !important;
+    color: rgb(214, 214, 214) !important;
+  }
+  
+.Select-menu-outer {
+    background-color: rgb(25, 25, 25);
+    color: rgb(214, 214, 214) !important;
+}
+
+.Select-value-label {
+    background-color: rgb(25, 25, 25);
+    color: rgb(214, 214, 214) !important;
+}
+
+.graph-selector-text {
+    color: rgb(214, 214, 214) !important;
+    margin-left: 6px;
+    margin-top: 6px;
+}
+
+
+/* 
+.header-title {
+    margin: 12px 0px;
+    font-size: 26px;
+    font-weight: bold;
 }
 
 .control-panel {
-    width: 100%;
-    height: 100%;
+    width: 20%;
+    height: calc(100vh - 24px);
     position: absolute;
     top: 0;
     left: 0;
     z-index: 10;
-  }
+    background-color: rgba(255, 255, 255, 1);
+    margin: 12px;
+    border-radius: 8px; 
+    
+}
+
+.control-panel-content {
+    margin: 12px;
+} */
