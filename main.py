@@ -112,21 +112,24 @@ app.layout = html.Div(
                 children=[
                     html.Div(
                         children=[
-                            html.H5("Accesibilidad",
+                            html.H5("Accesibilidad en Bogotá",
                                     className="card-title"),
                             html.P(
-                                "Some quick example text to build on the card title and make "
-                                "up the bulk of the card's content.",
+                                "Esta plataforma busca responder"
+                                "¿Cómo es la accesibilidad en Bogotá según el tipo de usuario?"
+                                "En la sección de abajo encontrará menus para que juegue y vea"
+                                "qué tan accesibles son las oportunidades para personas"
+                                "según su modo de transporte",
                                 className="card-text",
                             ),
-                            html.H6('Ciudad'),
+                            html.H6('Elija la ciudad'),
                             dcc.Dropdown(
                                 options=list(constants.CENTER_CITY_COORDINATES.keys()),
                                 value=list(constants.CENTER_CITY_COORDINATES.keys())[0],
                                 id=constants.CITY_SELECTOR,
                                 clearable=False
                             ),
-                            html.H6('Medio de acceso'),
+                            html.H6('Elija un modo de transporte'),
                             dcc.Dropdown(
                                 options=list(constants.ACCESIBILITY_MEANS.keys()),
                                 value=list(constants.ACCESIBILITY_MEANS.keys())[0],
