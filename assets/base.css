@@ -42,16 +42,18 @@ p {
     margin-left: 16px; */
 }
 
-.map-content {
+/* .map-content {
     height: calc(60vh);
     width: calc(100%);
-    /* margin-left: 10px !important; */
-    /* padding: 0px !important; */
-    /* box-shadow: 2px 2px 2px lightgrey;  */
-    /* border-radius: 5px; */
+    border: none;
+} */
+
+
+.map-content {
+    height: calc(100vh);
+    width: calc(100%);
     border: none;
 }
-
 .card-title {
     margin: 12px 0px;
     font-size: 20px;
