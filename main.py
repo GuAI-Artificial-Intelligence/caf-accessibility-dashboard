@@ -1,5 +1,6 @@
 # Python
 import json 
+from pathlib import Path
 
 # Data Analysis
 import pandas as pd
@@ -21,14 +22,18 @@ import constants
 # Credentials
 from conf.credentials import MAPBOX_TOKEN
 
+current_path = Path()
+
 dataset = pd.read_csv(
-    "data/test_bogota_cuenca_data.csv")
+    current_path / "data" / "test_bogota_cuenca_data.csv"
+    )
 
 dataset_neighborhoods = pd.read_csv(
-    "data/test_bogota_cuenca_neighborhoods_data.csv")
+    current_path / "data" / "test_bogota_cuenca_neighborhoods_data.csv"
+    )
 
 bogota_h3_gdf = gpd.read_file(
-    'data/Bogotá_new_shape_h3_child.geojson'
+    current_path / 'data' / 'Bogotá_new_shape_h3_child.geojson'
     )
 
 def get_hex_map(city):
