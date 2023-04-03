@@ -33,15 +33,15 @@ dataset_neighborhoods = pd.read_csv(
     )
 
 bogota_h3_gdf = gpd.read_file(
-    current_path / 'data' / 'Bogotá_new_shape_h3_child.geojson'
+    current_path / 'data' / 'Bogota_new_shape_h3_child.geojson'
     )
 
 def get_hex_map(city):
 
+    print('Esta entrando')
+
     variable = 'NSE3'
 
-    print(bogota_h3_gdf.columns)
-    
     lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
     lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
 
