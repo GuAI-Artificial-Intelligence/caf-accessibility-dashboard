@@ -2,6 +2,7 @@
 import json 
 from pathlib import Path
 import time
+from urllib.request import urlopen
 
 # Data Analysis
 import pandas as pd
@@ -10,6 +11,7 @@ import numpy as np
 
 # Plotly
 import plotly.express as px
+import plotly.graph_objects as go
 
 # Dash
 from dash import Dash, dcc, html, Input, Output, ctx
@@ -25,138 +27,170 @@ from conf.credentials import MAPBOX_TOKEN
 
 current_path = Path()
 
-dataset = pd.read_csv(
-    current_path / "data" / "test_bogota_cuenca_data.csv"
-    )
+# dataset = pd.read_csv(
+#     current_path / "data" / "test_bogota_cuenca_data.csv"
+#     )
 
-dataset_neighborhoods = pd.read_csv(
-    current_path / "data" / "test_bogota_cuenca_neighborhoods_data.csv"
-    )
+# dataset_neighborhoods = pd.read_csv(
+#     current_path / "data" / "test_bogota_cuenca_neighborhoods_data.csv"
+#     )
 
-bogota_h3_gdf = gpd.read_file(
-    current_path / 'data' / 'Bogota_new_shape_h3_child.geojson'
-    )
+# bogota_h3_gdf = gpd.read_file(
+#     current_path / 'data' / 'Bogota_new_shape_h3_child.geojson'
+#     )
 
+bogota_cuenca_gdf = gpd.read_file(
+    current_path / 'data' / 'bogota_cuenca_v1.geojson'
+)
+
+# --
+locations = bogota_cuenca_gdf.index
+variable = 'NSE_3'
+max_range = max(bogota_cuenca_gdf[variable])
+
+# fig_hex_map = px.choropleth_mapbox(
+#     data_frame=data[variable], 
+#     geojson=geojson.geometry, 
+#     locations=locations,
+#     color=variable,
+#     range_color=(1, max_range),
+#     color_continuous_scale="Turbo",
+#     mapbox_style="carto-positron",
+#     zoom=10, 
+#     opacity=0.4,
+#     center = {
+#             "lat": constants.CENTER_CITY_COORDINATES['Bogotá']['center_lat'],
+#             "lon": constants.CENTER_CITY_COORDINATES['Bogotá']['center_lon']
+#         },
+# )
+# fig_hex_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+# fig_hex_map.update_coloraxes(colorbar_orientation='v')
+# fig_hex_map.update_coloraxes(colorbar_thickness=10)
+# fig_hex_map.update_coloraxes(colorbar_title=dict(text=''))
+# fig_hex_map.update_coloraxes(colorbar_y=0.2)
+# fig_hex_map.update_coloraxes(colorbar_x=0.92)
+# fig_hex_map.update_coloraxes(colorbar_len=0.3)
+# fig_hex_map.update_coloraxes(colorbar_tickfont=dict(color="#323232"))
 
 
 
 def get_hex_map(city):
-    t1 = time.time()
+    # t1 = time.time()
 
-    variable = 'NSE3'
+    variable = 'NSE_3'
 
     lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
     lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
 
-
-    data = bogota_h3_gdf[variable]
-    geojson = bogota_h3_gdf['geometry'].__geo_interface__
-    locations = bogota_h3_gdf.index
-    max_range = max(bogota_h3_gdf[variable])
+    if city=='Bogotá':
+        zoom = 10
+    if city=='Cuenca':
+        zoom = 11.5
     
-    t2 = time.time()
-    print("Execution time t1: {:.2f} seconds".format(t2 - t1))
+    max_range = max(bogota_cuenca_gdf[variable])
 
-    fig = px.choropleth_mapbox(
-        data, 
-        geojson=geojson, 
+    # fig_hex_map.update_layout(
+    #     mapbox={
+    #         'center': {'lon': lon, 'lat': lat},
+    #         'zoom': zoom
+    #     }
+    # )
+
+    fig_hex_map = px.choropleth_mapbox(
+        data_frame=bogota_cuenca_gdf[variable], 
+        geojson=bogota_cuenca_gdf.geometry, 
         locations=locations,
         color=variable,
-        color_continuous_scale="Turbo",
         range_color=(1, max_range),
+        color_continuous_scale="Turbo",
         mapbox_style="carto-positron",
-        zoom=10, 
+        zoom=zoom, 
         center = {"lat": lat, "lon": lon},
         opacity=0.4,
         )
     
-    t3 = time.time()
-    print("Execution time t2: {:.2f} seconds".format(t3 - t2))
-
-    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
-    fig.update_coloraxes(colorbar_orientation='v')
-    fig.update_coloraxes(colorbar_thickness=10)
-    fig.update_coloraxes(colorbar_title=dict(text=''))
-    fig.update_coloraxes(colorbar_y=0.2)
-    fig.update_coloraxes(colorbar_x=0.92)
-    fig.update_coloraxes(colorbar_len=0.3)
-    fig.update_coloraxes(colorbar_tickfont=dict(color="#323232"))
-
-    t4 = time.time()
-    print("Execution time t3: {:.2f} seconds".format(t4 - t3))
-
-    return fig
+    fig_hex_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+    fig_hex_map.update_coloraxes(colorbar_orientation='v')
+    fig_hex_map.update_coloraxes(colorbar_thickness=10)
+    fig_hex_map.update_coloraxes(colorbar_title=dict(text=''))
+    fig_hex_map.update_coloraxes(colorbar_y=0.2)
+    fig_hex_map.update_coloraxes(colorbar_x=0.92)
+    fig_hex_map.update_coloraxes(colorbar_len=0.3)
+    fig_hex_map.update_coloraxes(colorbar_tickfont=dict(color="#323232"))
 
 
-def get_selector_graph(city, accesibility_means):
-
-    fig = px.scatter(
-        dataset_neighborhoods[dataset_neighborhoods.city == city],
-        x=constants.ACCESIBILITY_MEANS[accesibility_means],
-        y="population",
-        size="population",
-        color=constants.ACCESIBILITY_MEANS[accesibility_means],
-        hover_name="neighborhood",
-        log_x=False,
-        size_max=20,
-        height=250,
-    )
-
-    fig.update_yaxes(visible=False, showticklabels=False)
-    fig.update_xaxes(visible=False, showticklabels=False)
-    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
-    fig.update_layout(showlegend=False)
-    fig.update_layout(plot_bgcolor="#343332")
-    fig.update_traces(marker_sizemin=3, selector=dict(type='scatter'))
-
-    fig.update_coloraxes(colorbar_orientation='h')
-    fig.update_coloraxes(colorbar_thickness=10)
-    fig.update_coloraxes(colorbar_title=dict(text=''))
-    fig.update_coloraxes(colorbar_y=0.0)
-    fig.update_coloraxes(colorbar_x=0.5)
-    fig.update_coloraxes(colorbar_len=0.3)
-    fig.update_coloraxes(colorbar_tickfont=dict(color="#f4f4f4"))
-
-    return fig
+    return fig_hex_map
 
 
-def get_centered_map(city, accesibility_means, neighborhood):
+# def get_selector_graph(city, accesibility_means):
+
+#     fig = px.scatter(
+#         dataset_neighborhoods[dataset_neighborhoods.city == city],
+#         x=constants.ACCESIBILITY_MEANS[accesibility_means],
+#         y="population",
+#         size="population",
+#         color=constants.ACCESIBILITY_MEANS[accesibility_means],
+#         hover_name="neighborhood",
+#         log_x=False,
+#         size_max=20,
+#         height=250,
+#     )
+
+#     fig.update_yaxes(visible=False, showticklabels=False)
+#     fig.update_xaxes(visible=False, showticklabels=False)
+#     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+#     fig.update_layout(showlegend=False)
+#     fig.update_layout(plot_bgcolor="#343332")
+#     fig.update_traces(marker_sizemin=3, selector=dict(type='scatter'))
+
+#     fig.update_coloraxes(colorbar_orientation='h')
+#     fig.update_coloraxes(colorbar_thickness=10)
+#     fig.update_coloraxes(colorbar_title=dict(text=''))
+#     fig.update_coloraxes(colorbar_y=0.0)
+#     fig.update_coloraxes(colorbar_x=0.5)
+#     fig.update_coloraxes(colorbar_len=0.3)
+#     fig.update_coloraxes(colorbar_tickfont=dict(color="#f4f4f4"))
+
+#     return fig
+
+
+# def get_centered_map(city, accesibility_means, neighborhood):
     
-    if neighborhood is None:
-        lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
-        lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
-        zoom = 10
-    else:
-        lat = dataset_neighborhoods[dataset_neighborhoods.neighborhood==neighborhood].latitude.values[0]
-        lon = dataset_neighborhoods[dataset_neighborhoods.neighborhood==neighborhood].longitude.values[0]
-        zoom = 12
+#     if neighborhood is None:
+#         lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
+#         lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
+#         zoom = 10
+#     else:
+#         lat = dataset_neighborhoods[dataset_neighborhoods.neighborhood==neighborhood].latitude.values[0]
+#         lon = dataset_neighborhoods[dataset_neighborhoods.neighborhood==neighborhood].longitude.values[0]
+#         zoom = 12
 
-    fig = px.density_mapbox(
-        dataset,
-        lat="latitude",
-        lon="longitude",
-        z=constants.ACCESIBILITY_MEANS[accesibility_means],
-        radius=10,
-        hover_name="city",
-        hover_data=["city", "accessibility_foot"],
-        center=dict(lat=lat, lon=lon),
-        zoom=zoom,
-        opacity=1,
-        mapbox_style="carto-darkmatter",
-        # mapbox_style="open-street-map",
+#     fig = px.density_mapbox(
+#         dataset,
+#         lat="latitude",
+#         lon="longitude",
+#         z=constants.ACCESIBILITY_MEANS[accesibility_means],
+#         radius=10,
+#         hover_name="city",
+#         hover_data=["city", "accessibility_foot"],
+#         center=dict(lat=lat, lon=lon),
+#         zoom=zoom,
+#         opacity=1,
+#         mapbox_style="carto-darkmatter",
+#         # mapbox_style="open-street-map",
 
-    )
-    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
-    fig.update_coloraxes(colorbar_orientation='v')
-    fig.update_coloraxes(colorbar_thickness=10)
-    fig.update_coloraxes(colorbar_title=dict(text=''))
-    fig.update_coloraxes(colorbar_y=0.2)
-    fig.update_coloraxes(colorbar_x=0.92)
-    fig.update_coloraxes(colorbar_len=0.3)
-    fig.update_coloraxes(colorbar_tickfont=dict(color="#f4f4f4"))
-    token = MAPBOX_TOKEN
-    fig.update_layout(mapbox_style="dark", mapbox_accesstoken=token)
-    return fig
+#     )
+#     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+#     fig.update_coloraxes(colorbar_orientation='v')
+#     fig.update_coloraxes(colorbar_thickness=10)
+#     fig.update_coloraxes(colorbar_title=dict(text=''))
+#     fig.update_coloraxes(colorbar_y=0.2)
+#     fig.update_coloraxes(colorbar_x=0.92)
+#     fig.update_coloraxes(colorbar_len=0.3)
+#     fig.update_coloraxes(colorbar_tickfont=dict(color="#f4f4f4"))
+#     token = MAPBOX_TOKEN
+#     fig.update_layout(mapbox_style="dark", mapbox_accesstoken=token)
+#     return fig
 
 
 # fig = get_centered_map(
@@ -165,8 +199,8 @@ def get_centered_map(city, accesibility_means, neighborhood):
 #     None
 #     )
 
-# TODO
-fig = get_hex_map(
+
+fig_hex_map = get_hex_map(
     list(constants.CENTER_CITY_COORDINATES.keys())[0]
 )
 
@@ -218,7 +252,7 @@ app.layout = html.Div(
                             html.Div(
                                 children=[
                                     dcc.Graph(
-                                        figure=fig,
+                                        figure=fig_hex_map,
                                         style={"height": "100%",
                                                "width": "100%"},
                                         config={
