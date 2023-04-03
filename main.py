@@ -1,6 +1,7 @@
 # Python
 import json 
 from pathlib import Path
+import time
 
 # Data Analysis
 import pandas as pd
@@ -36,27 +37,41 @@ bogota_h3_gdf = gpd.read_file(
     current_path / 'data' / 'Bogota_new_shape_h3_child.geojson'
     )
 
-def get_hex_map(city):
 
-    print('Esta entrando')
+
+
+def get_hex_map(city):
+    t1 = time.time()
 
     variable = 'NSE3'
 
     lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
     lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
 
+
+    data = bogota_h3_gdf[variable]
+    geojson = bogota_h3_gdf['geometry'].__geo_interface__
+    locations = bogota_h3_gdf.index
+    max_range = max(bogota_h3_gdf[variable])
+    
+    t2 = time.time()
+    print("Execution time t1: {:.2f} seconds".format(t2 - t1))
+
     fig = px.choropleth_mapbox(
-        bogota_h3_gdf, 
-        geojson=json.loads(bogota_h3_gdf.to_json()), 
-        locations=bogota_h3_gdf.index.values.astype(str),
+        data, 
+        geojson=geojson, 
+        locations=locations,
         color=variable,
         color_continuous_scale="Turbo",
-        range_color=(1, max(bogota_h3_gdf[variable])),
+        range_color=(1, max_range),
         mapbox_style="carto-positron",
         zoom=10, 
         center = {"lat": lat, "lon": lon},
         opacity=0.4,
         )
+    
+    t3 = time.time()
+    print("Execution time t2: {:.2f} seconds".format(t3 - t2))
 
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
     fig.update_coloraxes(colorbar_orientation='v')
@@ -66,6 +81,9 @@ def get_hex_map(city):
     fig.update_coloraxes(colorbar_x=0.92)
     fig.update_coloraxes(colorbar_len=0.3)
     fig.update_coloraxes(colorbar_tickfont=dict(color="#323232"))
+
+    t4 = time.time()
+    print("Execution time t3: {:.2f} seconds".format(t4 - t3))
 
     return fig
 
