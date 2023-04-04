@@ -2,7 +2,8 @@
 import json 
 from pathlib import Path
 import time
-from urllib.request import urlopen
+import sys
+
 
 # Data Analysis
 import pandas as pd
@@ -34,224 +35,121 @@ bogota_cuenca_gdf_geo = gpd.read_file(
     current_path / 'data' / 'bogota_cuenca_geo_v1.geojson',
 )
 
-# bogota_cuenca_gdf[['geometry', 'city']].to_file('data/bogota_cuenca_geo_v1.geojson', driver='GeoJSON')
-# bogota_cuenca_gdf_csv.drop('geometry', axis=1).to_csv("data/bogota_cuenca_v1.csv", index=False)
 
-bogota_gdf_geo = bogota_cuenca_gdf_geo[bogota_cuenca_gdf_geo.city=='Bogotá'].copy()
-cuenca_gdf_geo = bogota_cuenca_gdf_geo[bogota_cuenca_gdf_geo.city=='Cuenca'].copy()
-
-bogota_gdf_csv = bogota_cuenca_df_csv[bogota_cuenca_df_csv.city=='Bogotá'].copy()
-cuenca_gdf_csv = bogota_cuenca_df_csv[bogota_cuenca_df_csv.city=='Cuenca'].copy()
-
-del bogota_cuenca_df_csv
-del bogota_cuenca_gdf_geo
-
-variable = constants.CATEGORICAL_VARIABLES[1]
-geojson_bogota = bogota_gdf_geo.geometry
-geojson_cuenca = cuenca_gdf_geo.geometry
+geojson_bogota_cuenca = bogota_cuenca_gdf_geo.geometry
 
 
-def get_hex_map(city, variable=constants.CATEGORICAL_VARIABLES[1]):
 
+def init_map(df=bogota_cuenca_df_csv, geodf=geojson_bogota_cuenca, variable='NSE_5', city=constants.BOGOTA_STR):
+    z = df[variable].map(constants.NSE_5_DICTMAP).values
+    colorbar = constants.CATEGORICAL_COLORBAR
+    colorbar['tickvals'] = constants.NS5_TICKVALS
+    colorbar['ticktext'] = constants.NS5_TICKTEXT
+    colorbar['title'] = '<b>Nivel socio<br>económico</b><br> .'
+    fig_hex_map = go.Figure(
+        go.Choroplethmapbox(
+            geojson=json.loads(geodf.to_json()), 
+            z=z,
+            locations=pd.Series(df.index.values).astype(str), 
+            colorbar=colorbar,
+            colorscale=constants.NS5_COLORSCALE,
+            marker_opacity=0.4
+        )
+    )
+
+    fig_hex_map.update_layout(
+        mapbox_accesstoken=MAPBOX_TOKEN,
+        mapbox_center = {
+            "lat": constants.CENTER_CITY_COORDINATES[city]['center_lat'], 
+            "lon": constants.CENTER_CITY_COORDINATES[city]['center_lon']
+        },
+        mapbox_zoom=10,
+        margin={"r": 0, "t": 0, "l": 0, "b": 0}
+    )
+    return fig_hex_map
     
+
+fig_hex_map = init_map()
+
+
+# end_time2 = time.time()
+
+# elapsed_time = end_time - start_time
+# elapsed_time2 = end_time2 - start_time2
+# print(f"Elapsed time (2): {elapsed_time} seconds")
+# print(f"Elapsed time (3): {elapsed_time2} seconds")
+
+
+
+def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[1], df=bogota_cuenca_df_csv):
+
 
     lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
     lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
 
-    categorical_variable = False
+    nse_variable = False
     if variable in constants.CATEGORICAL_VARIABLES:
-        categorical_variable = True
+        nse_variable = True
 
     if city==constants.BOGOTA_STR:
         zoom = 10
-        data = bogota_gdf_csv.to_dict()
-        locations = bogota_gdf_csv.index
-        geojson = geojson_bogota
 
     if city==constants.CUENCA_STR:
         zoom = 11.5
-        data = cuenca_gdf_csv.to_dict()
-        locations = cuenca_gdf_csv.index
-        geojson = geojson_cuenca
 
-    if categorical_variable:
+    if nse_variable:
+        colorbar = constants.CATEGORICAL_COLORBAR
         if variable==constants.CATEGORICAL_VARIABLES[0]:
-            color_discrete_map = {
-                '1 - Alto':'#daa98a',
-                '2 - Medio':'#b63c3f',
-                '3 - Bajo':'#311a3c'
-            }
-            category_orders={
-                constants.CATEGORICAL_VARIABLES[0] : [
-                    '1 - Alto',
-                    '2 - Medio',
-                    '3 - Bajo'
-                ]
-            }
-
+            z = df[variable].map(constants.NSE_3_DICTMAP).values
+            colorbar['tickvals'] = constants.NS3_TICKVALS
+            colorbar['ticktext'] = constants.NS3_TICKTEXT
+            zmax=3
         if variable==constants.CATEGORICAL_VARIABLES[1]:
-            color_discrete_map = {
-                '1 - Alto':'#daa98a',
-                '2 - Medio-Alto':'#ae6045',
-                '3 - Medio':'#b63c3f',
-                '4 - Medio-Bajo':'#922651',
-                '5 - Bajo':'#311a3c'
-            }
-            category_orders={
-                constants.CATEGORICAL_VARIABLES[1] : [
-                    '1 - Alto',
-                    '2 - Medio-Alto',
-                    '3 - Medio',
-                    '4 - Medio-Bajo',
-                    '5 - Bajo'
-                ]
-            }
-
-        start_time = time.time()
-        
-        fig_hex_map = px.choropleth_mapbox(
-            # data_frame=data[[variable].to_dict(), 
-            geojson=geojson, 
-            locations=locations,
-            color=data[variable],
-            color_continuous_scale="Turbo",
-            mapbox_style="carto-positron",
-            #zoom=zoom, 
-            center = {"lat": lat, "lon": lon},
-            opacity=0.4,
-            color_discrete_map=color_discrete_map,
-            category_orders=category_orders
-        )
-        
-        end_time = time.time()
-
-        fig_hex_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
-        fig_hex_map.update_layout(
-            showlegend=True,
-            legend=dict(
-                x=0.95,
-                y=0.05,
-                xanchor='right',
-                yanchor='bottom'
-            ),
-
-        )
-        
-
+            z = df[variable].map(constants.NSE_5_DICTMAP).values
+            colorbar['tickvals'] = constants.NS5_TICKVALS
+            colorbar['ticktext'] = constants.NS5_TICKTEXT
+            zmax=5
+        colorbar['title'] = '<b>Nivel socio<br>económico</b><br> .'
+        # fig_hex_map.update_traces(
+        #     overwrite=True,
+        #     z=z,
+        #     zmin=0,
+        #     zmax=zmax,
+        #     colorscale='Magma',
+        #     colorbar=colorbar,
+        #     selector=dict(type='choroplethmapbox'),
+        # )
     else:
-        max_range = max(data[variable])
-        fig_hex_map = px.choropleth_mapbox(
-            data_frame=data[variable], 
-            geojson=geojson, 
-            locations=data.index,
-            color=variable,
-            range_color=(1, max_range),
-            color_continuous_scale="Turbo",
-            mapbox_style="carto-positron",
-            zoom=zoom, 
-            center = {"lat": lat, "lon": lon},
-            opacity=0.4,
-            )
-        fig_hex_map.update_layout(
-            margin={"r": 0, "t": 0, "l": 0, "b": 0},
-        )
-        fig_hex_map.update_coloraxes(colorbar_orientation='v')
-        fig_hex_map.update_coloraxes(colorbar_thickness=10)
-        # fig_hex_map.update_coloraxes(colorbar_title=dict(text=''))
-        fig_hex_map.update_coloraxes(colorbar_y=0.15)
-        fig_hex_map.update_coloraxes(colorbar_x=0.88)
-        fig_hex_map.update_coloraxes(colorbar_len=0.2)
-        fig_hex_map.update_coloraxes(colorbar_tickfont=dict(color="#323232"))
+        z = df[variable]
+        indices = np.where(df['city'] == city)
+        zmax = df[variable].values[indices].max()
+        colorbar = constants.CATEGORICAL_COLORBAR
+        colorbar['title'] = f'<b>{variable}</b><br> .'
+        colorbar['tickmode'] = 'auto'
 
-    
-    
-    elapsed_time = end_time - start_time
-    print(f"Elapsed time (1): {elapsed_time} seconds")
+    fig_hex_map.update_traces(
+        overwrite=True,
+        z=z,
+        zmin=0,
+        zmax=zmax,
+        colorscale='Magma',
+        colorbar=colorbar,
+        selector=dict(type='choroplethmapbox'),
+    )
+    fig_hex_map.update_layout(
+        mapbox_center = {
+            "lat": lat, 
+            "lon": lon
+        },
+        mapbox_zoom=zoom, 
+    )
+
+
 
     return fig_hex_map
 
 
-# def get_selector_graph(city, accesibility_means):
 
-#     fig = px.scatter(
-#         dataset_neighborhoods[dataset_neighborhoods.city == city],
-#         x=constants.ACCESIBILITY_MEANS[accesibility_means],
-#         y="population",
-#         size="population",
-#         color=constants.ACCESIBILITY_MEANS[accesibility_means],
-#         hover_name="neighborhood",
-#         log_x=False,
-#         size_max=20,
-#         height=250,
-#     )
-
-#     fig.update_yaxes(visible=False, showticklabels=False)
-#     fig.update_xaxes(visible=False, showticklabels=False)
-#     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
-#     fig.update_layout(showlegend=False)
-#     fig.update_layout(plot_bgcolor="#343332")
-#     fig.update_traces(marker_sizemin=3, selector=dict(type='scatter'))
-
-#     fig.update_coloraxes(colorbar_orientation='h')
-#     fig.update_coloraxes(colorbar_thickness=10)
-#     fig.update_coloraxes(colorbar_title=dict(text=''))
-#     fig.update_coloraxes(colorbar_y=0.0)
-#     fig.update_coloraxes(colorbar_x=0.5)
-#     fig.update_coloraxes(colorbar_len=0.3)
-#     fig.update_coloraxes(colorbar_tickfont=dict(color="#f4f4f4"))
-
-#     return fig
-
-
-# def get_centered_map(city, accesibility_means, neighborhood):
-    
-#     if neighborhood is None:
-#         lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
-#         lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
-#         zoom = 10
-#     else:
-#         lat = dataset_neighborhoods[dataset_neighborhoods.neighborhood==neighborhood].latitude.values[0]
-#         lon = dataset_neighborhoods[dataset_neighborhoods.neighborhood==neighborhood].longitude.values[0]
-#         zoom = 12
-
-#     fig = px.density_mapbox(
-#         dataset,
-#         lat="latitude",
-#         lon="longitude",
-#         z=constants.ACCESIBILITY_MEANS[accesibility_means],
-#         radius=10,
-#         hover_name="city",
-#         hover_data=["city", "accessibility_foot"],
-#         center=dict(lat=lat, lon=lon),
-#         zoom=zoom,
-#         opacity=1,
-#         mapbox_style="carto-darkmatter",
-#         # mapbox_style="open-street-map",
-
-#     )
-#     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
-#     fig.update_coloraxes(colorbar_orientation='v')
-#     fig.update_coloraxes(colorbar_thickness=10)
-#     fig.update_coloraxes(colorbar_title=dict(text=''))
-#     fig.update_coloraxes(colorbar_y=0.2)
-#     fig.update_coloraxes(colorbar_x=0.92)
-#     fig.update_coloraxes(colorbar_len=0.3)
-#     fig.update_coloraxes(colorbar_tickfont=dict(color="#f4f4f4"))
-#     token = MAPBOX_TOKEN
-#     fig.update_layout(mapbox_style="dark", mapbox_accesstoken=token)
-#     return fig
-
-
-# fig = get_centered_map(
-#     list(constants.CENTER_CITY_COORDINATES.keys())[0], 
-#     list(constants.ACCESIBILITY_MEANS.keys())[0],
-#     None
-#     )
-
-
-fig_hex_map = get_hex_map(
-    list(constants.CENTER_CITY_COORDINATES.keys())[0]
-)
 
 # Create a Dash app
 app = Dash(
@@ -349,7 +247,7 @@ app.layout = html.Div(
 
 
 
-@ app.callback(
+@app.callback(
         Output(component_id=constants.MAP_ID, component_property='figure'),
     
         [
@@ -365,33 +263,12 @@ app.layout = html.Div(
 )
 def update_output_div(city, variable):
     triggered_input = ctx.triggered_id
-    return get_hex_map(city, variable)
+    return update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable)
     
 
 
 
-# @ app.callback(
-#     [
-#         Output(component_id=constants.MAP_ID, component_property='figure'),
-#         # Output(component_id=constants.SCATTER_ID, component_property='figure')
-#     ],
-#     [
-#         Input(component_id=constants.CITY_SELECTOR, component_property='value'),
-#         Input(component_id=constants.ACCESIBILITY_SELECTOR,
-#               component_property='value'),
-#         # Input(component_id=constants.SCATTER_ID,
-#         #       component_property='hoverData'),
-#     ]
-# )
-# def update_output_div(city, accesibility_means):
-# # def update_output_div(city, accesibility_means, clicked_neighborhoods):
-#     triggered_input = ctx.triggered_id
-#     # if ((triggered_input == constants.SCATTER_ID or triggered_input == constants.ACCESIBILITY_SELECTOR) and (clicked_neighborhoods!= None)):
-#     #     neighborhood =  clicked_neighborhoods['points'][0]['hovertext']
-#     # else:
-#     #     neighborhood = None
-#     return get_hex_map(city)
-#     #return get_centered_map(city, accesibility_means, neighborhood), get_selector_graph(city, accesibility_means)
+
 
 
 # Run the app
