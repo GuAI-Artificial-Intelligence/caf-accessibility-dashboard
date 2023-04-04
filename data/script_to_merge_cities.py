@@ -29,15 +29,15 @@ bogota.rename(
 )
 bogota['city'] = 'Bogotá'
 
-ns3_map = {
+nse3_map = {
     '3 Bajo':'3 - Bajo',     
     '1 Alto': '1 - Alto',     
     '2 Medio': '2 - Medio'    
 }
-bogota.NSE_3 = bogota.NSE_3.map(ns3_map)
+bogota.NSE_3 = bogota.NSE_3.map(nse3_map)
 
 
-ns5_map = {
+nse5_map = {
     '5 Bajo':'5 - Bajo',          
     '1 Alto':'1 - Alto',          
     '2 Medio-Alto':'2 - Medio-Alto',     
@@ -45,7 +45,7 @@ ns5_map = {
     '3 Medio':'3 - Medio'   
 }
 
-bogota.NSE_5 = bogota.NSE_5.map(ns3_map)
+bogota.NSE_5 = bogota.NSE_5.map(nse5_map)
 mix = pd.concat([bogota, cuenca])
 
 mix.to_file('bogota_cuenca_v1.geojson', driver='GeoJSON')

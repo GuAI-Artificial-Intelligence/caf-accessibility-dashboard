@@ -4,8 +4,8 @@ CENTER_CITY_COORDINATES = {
         'center_lon': -74.0721
     },
     'Cuenca': {
-        'center_lat': -2.897213,
-        'center_lon': -79.003138
+        'center_lat': -2.891889142459372,
+        'center_lon': -78.9889487554136
     }
 }
 ACCESIBILITY_MEANS = {

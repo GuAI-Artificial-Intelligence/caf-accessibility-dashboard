@@ -27,97 +27,128 @@ from conf.credentials import MAPBOX_TOKEN
 
 current_path = Path()
 
-# dataset = pd.read_csv(
-#     current_path / "data" / "test_bogota_cuenca_data.csv"
-#     )
-
-# dataset_neighborhoods = pd.read_csv(
-#     current_path / "data" / "test_bogota_cuenca_neighborhoods_data.csv"
-#     )
 
 # bogota_h3_gdf = gpd.read_file(
 #     current_path / 'data' / 'Bogota_new_shape_h3_child.geojson'
 #     )
 
+
 bogota_cuenca_gdf = gpd.read_file(
     current_path / 'data' / 'bogota_cuenca_v1.geojson'
 )
 
+bogota_gdf = bogota_cuenca_gdf[bogota_cuenca_gdf.city=='Bogotá'].copy()
+cuenca_gdf = bogota_cuenca_gdf[bogota_cuenca_gdf.city=='Cuenca'].copy()
+
+del bogota_cuenca_gdf
+
 # --
-locations = bogota_cuenca_gdf.index
-variable = 'NSE_3'
-max_range = max(bogota_cuenca_gdf[variable])
-
-# fig_hex_map = px.choropleth_mapbox(
-#     data_frame=data[variable], 
-#     geojson=geojson.geometry, 
-#     locations=locations,
-#     color=variable,
-#     range_color=(1, max_range),
-#     color_continuous_scale="Turbo",
-#     mapbox_style="carto-positron",
-#     zoom=10, 
-#     opacity=0.4,
-#     center = {
-#             "lat": constants.CENTER_CITY_COORDINATES['Bogotá']['center_lat'],
-#             "lon": constants.CENTER_CITY_COORDINATES['Bogotá']['center_lon']
-#         },
-# )
-# fig_hex_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
-# fig_hex_map.update_coloraxes(colorbar_orientation='v')
-# fig_hex_map.update_coloraxes(colorbar_thickness=10)
-# fig_hex_map.update_coloraxes(colorbar_title=dict(text=''))
-# fig_hex_map.update_coloraxes(colorbar_y=0.2)
-# fig_hex_map.update_coloraxes(colorbar_x=0.92)
-# fig_hex_map.update_coloraxes(colorbar_len=0.3)
-# fig_hex_map.update_coloraxes(colorbar_tickfont=dict(color="#323232"))
+locations = bogota_gdf.index.values
+variable = 'NSE_5'
+geojson_bogota = bogota_gdf.geometry
+geojson_cuenca = cuenca_gdf.geometry
 
 
-
-def get_hex_map(city):
-    # t1 = time.time()
-
-    variable = 'NSE_3'
+def get_hex_map(city, variable='NSE_5'):
 
     lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
     lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
 
+    categorical_variable = False
+    if variable in ['NSE_3', 'NSE_5']:
+        categorical_variable = True
+
     if city=='Bogotá':
         zoom = 10
+        data = bogota_gdf
+        geojson = geojson_bogota
+
     if city=='Cuenca':
         zoom = 11.5
-    
-    max_range = max(bogota_cuenca_gdf[variable])
+        data = cuenca_gdf
+        geojson = geojson_cuenca
 
-    # fig_hex_map.update_layout(
-    #     mapbox={
-    #         'center': {'lon': lon, 'lat': lat},
-    #         'zoom': zoom
-    #     }
-    # )
+    if categorical_variable:
+        if variable=='NSE_3':
+            color_discrete_map = {
+                '1 - Alto':'#daa98a',
+                '2 - Medio':'#b63c3f',
+                '3 - Bajo':'#311a3c'
+            }
+            category_orders={
+                'NSE_3' : [
+                    '1 - Alto',
+                    '2 - Medio',
+                    '3 - Bajo'
+                ]
+            }
 
-    fig_hex_map = px.choropleth_mapbox(
-        data_frame=bogota_cuenca_gdf[variable], 
-        geojson=bogota_cuenca_gdf.geometry, 
-        locations=locations,
-        color=variable,
-        range_color=(1, max_range),
-        color_continuous_scale="Turbo",
-        mapbox_style="carto-positron",
-        zoom=zoom, 
-        center = {"lat": lat, "lon": lon},
-        opacity=0.4,
+        if variable=='NSE_5':
+            color_discrete_map = {
+                '1 - Alto':'#daa98a',
+                '2 - Medio-Alto':'#ae6045',
+                '3 - Medio':'#b63c3f',
+                '4 - Medio-Bajo':'#922651',
+                '5 - Bajo':'#311a3c'
+            }
+            category_orders={
+                'NSE_5' : [
+                    '1 - Alto',
+                    '2 - Medio-Alto',
+                    '3 - Medio',
+                    '4 - Medio-Bajo',
+                    '5 - Bajo'
+                ]
+            }
+
+        fig_hex_map = px.choropleth_mapbox(
+            data_frame=data[variable], 
+            geojson=geojson, 
+            locations=data.index,
+            color=variable,
+            color_continuous_scale="Turbo",
+            mapbox_style="carto-positron",
+            zoom=zoom, 
+            center = {"lat": lat, "lon": lon},
+            opacity=0.4,
+            color_discrete_map=color_discrete_map,
+            category_orders=category_orders
         )
-    
-    fig_hex_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
-    fig_hex_map.update_coloraxes(colorbar_orientation='v')
-    fig_hex_map.update_coloraxes(colorbar_thickness=10)
-    fig_hex_map.update_coloraxes(colorbar_title=dict(text=''))
-    fig_hex_map.update_coloraxes(colorbar_y=0.2)
-    fig_hex_map.update_coloraxes(colorbar_x=0.92)
-    fig_hex_map.update_coloraxes(colorbar_len=0.3)
-    fig_hex_map.update_coloraxes(colorbar_tickfont=dict(color="#323232"))
+        fig_hex_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+        fig_hex_map.update_layout(
+            showlegend=True,
+            legend=dict(
+                x=0.95,
+                y=0.05,
+                xanchor='right',
+                yanchor='bottom'
+            ),
 
+        )
+    else:
+        max_range = max(data[variable])
+        fig_hex_map = px.choropleth_mapbox(
+            data_frame=data[variable], 
+            geojson=geojson, 
+            locations=data.index,
+            color=variable,
+            range_color=(1, max_range),
+            color_continuous_scale="Turbo",
+            mapbox_style="carto-positron",
+            zoom=zoom, 
+            center = {"lat": lat, "lon": lon},
+            opacity=0.4,
+            )
+        fig_hex_map.update_layout(
+            margin={"r": 0, "t": 0, "l": 0, "b": 0},
+        )
+        fig_hex_map.update_coloraxes(colorbar_orientation='v')
+        fig_hex_map.update_coloraxes(colorbar_thickness=10)
+        # fig_hex_map.update_coloraxes(colorbar_title=dict(text=''))
+        fig_hex_map.update_coloraxes(colorbar_y=0.15)
+        fig_hex_map.update_coloraxes(colorbar_x=0.88)
+        fig_hex_map.update_coloraxes(colorbar_len=0.2)
+        fig_hex_map.update_coloraxes(colorbar_tickfont=dict(color="#323232"))
 
     return fig_hex_map
 
@@ -232,6 +263,13 @@ app.layout = html.Div(
                                 id=constants.CITY_SELECTOR,
                                 clearable=False
                             ),
+                            html.H6('Variable'),
+                            dcc.Dropdown(
+                                options=['NSE_3', 'NSE_5', 'Poblacion'],
+                                value='NSE_5',
+                                id='my-variable-selector',
+                                clearable=False
+                            ),
                             # html.H6('Medio de acceso'),
                             # dcc.Dropdown(
                             #     options=list(constants.ACCESIBILITY_MEANS.keys()),
@@ -293,16 +331,20 @@ app.layout = html.Div(
 @ app.callback(
         Output(component_id=constants.MAP_ID, component_property='figure'),
     
+        [
         Input(component_id=constants.CITY_SELECTOR, component_property='value'),
+        Input(component_id='my-variable-selector', component_property='value')
+        
+    ],
         # Input(component_id=constants.ACCESIBILITY_SELECTOR,
         #       component_property='value'),
         # Input(component_id=constants.SCATTER_ID,
         #       component_property='hoverData'),
     
 )
-def update_output_div(city):
+def update_output_div(city, variable):
     triggered_input = ctx.triggered_id
-    return get_hex_map(city)
+    return get_hex_map(city, variable)
     
 
 
