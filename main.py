@@ -28,62 +28,68 @@ from conf.credentials import MAPBOX_TOKEN
 current_path = Path()
 
 
-# bogota_h3_gdf = gpd.read_file(
-#     current_path / 'data' / 'Bogota_new_shape_h3_child.geojson'
-#     )
 
-
-bogota_cuenca_gdf = gpd.read_file(
-    current_path / 'data' / 'bogota_cuenca_v1.geojson'
+bogota_cuenca_df_csv = pd.read_csv(current_path / 'data' / 'bogota_cuenca_v1.csv')
+bogota_cuenca_gdf_geo = gpd.read_file(
+    current_path / 'data' / 'bogota_cuenca_geo_v1.geojson',
 )
 
-bogota_gdf = bogota_cuenca_gdf[bogota_cuenca_gdf.city=='Bogotá'].copy()
-cuenca_gdf = bogota_cuenca_gdf[bogota_cuenca_gdf.city=='Cuenca'].copy()
+# bogota_cuenca_gdf[['geometry', 'city']].to_file('data/bogota_cuenca_geo_v1.geojson', driver='GeoJSON')
+# bogota_cuenca_gdf_csv.drop('geometry', axis=1).to_csv("data/bogota_cuenca_v1.csv", index=False)
 
-del bogota_cuenca_gdf
+bogota_gdf_geo = bogota_cuenca_gdf_geo[bogota_cuenca_gdf_geo.city=='Bogotá'].copy()
+cuenca_gdf_geo = bogota_cuenca_gdf_geo[bogota_cuenca_gdf_geo.city=='Cuenca'].copy()
 
-# --
-locations = bogota_gdf.index.values
-variable = 'NSE_5'
-geojson_bogota = bogota_gdf.geometry
-geojson_cuenca = cuenca_gdf.geometry
+bogota_gdf_csv = bogota_cuenca_df_csv[bogota_cuenca_df_csv.city=='Bogotá'].copy()
+cuenca_gdf_csv = bogota_cuenca_df_csv[bogota_cuenca_df_csv.city=='Cuenca'].copy()
+
+del bogota_cuenca_df_csv
+del bogota_cuenca_gdf_geo
+
+variable = constants.CATEGORICAL_VARIABLES[1]
+geojson_bogota = bogota_gdf_geo.geometry
+geojson_cuenca = cuenca_gdf_geo.geometry
 
 
-def get_hex_map(city, variable='NSE_5'):
+def get_hex_map(city, variable=constants.CATEGORICAL_VARIABLES[1]):
+
+    
 
     lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
     lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
 
     categorical_variable = False
-    if variable in ['NSE_3', 'NSE_5']:
+    if variable in constants.CATEGORICAL_VARIABLES:
         categorical_variable = True
 
-    if city=='Bogotá':
+    if city==constants.BOGOTA_STR:
         zoom = 10
-        data = bogota_gdf
+        data = bogota_gdf_csv.to_dict()
+        locations = bogota_gdf_csv.index
         geojson = geojson_bogota
 
-    if city=='Cuenca':
+    if city==constants.CUENCA_STR:
         zoom = 11.5
-        data = cuenca_gdf
+        data = cuenca_gdf_csv.to_dict()
+        locations = cuenca_gdf_csv.index
         geojson = geojson_cuenca
 
     if categorical_variable:
-        if variable=='NSE_3':
+        if variable==constants.CATEGORICAL_VARIABLES[0]:
             color_discrete_map = {
                 '1 - Alto':'#daa98a',
                 '2 - Medio':'#b63c3f',
                 '3 - Bajo':'#311a3c'
             }
             category_orders={
-                'NSE_3' : [
+                constants.CATEGORICAL_VARIABLES[0] : [
                     '1 - Alto',
                     '2 - Medio',
                     '3 - Bajo'
                 ]
             }
 
-        if variable=='NSE_5':
+        if variable==constants.CATEGORICAL_VARIABLES[1]:
             color_discrete_map = {
                 '1 - Alto':'#daa98a',
                 '2 - Medio-Alto':'#ae6045',
@@ -92,7 +98,7 @@ def get_hex_map(city, variable='NSE_5'):
                 '5 - Bajo':'#311a3c'
             }
             category_orders={
-                'NSE_5' : [
+                constants.CATEGORICAL_VARIABLES[1] : [
                     '1 - Alto',
                     '2 - Medio-Alto',
                     '3 - Medio',
@@ -101,19 +107,24 @@ def get_hex_map(city, variable='NSE_5'):
                 ]
             }
 
+        start_time = time.time()
+        
         fig_hex_map = px.choropleth_mapbox(
-            data_frame=data[variable], 
+            # data_frame=data[[variable].to_dict(), 
             geojson=geojson, 
-            locations=data.index,
-            color=variable,
+            locations=locations,
+            color=data[variable],
             color_continuous_scale="Turbo",
             mapbox_style="carto-positron",
-            zoom=zoom, 
+            #zoom=zoom, 
             center = {"lat": lat, "lon": lon},
             opacity=0.4,
             color_discrete_map=color_discrete_map,
             category_orders=category_orders
         )
+        
+        end_time = time.time()
+
         fig_hex_map.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
         fig_hex_map.update_layout(
             showlegend=True,
@@ -125,6 +136,8 @@ def get_hex_map(city, variable='NSE_5'):
             ),
 
         )
+        
+
     else:
         max_range = max(data[variable])
         fig_hex_map = px.choropleth_mapbox(
@@ -149,6 +162,11 @@ def get_hex_map(city, variable='NSE_5'):
         fig_hex_map.update_coloraxes(colorbar_x=0.88)
         fig_hex_map.update_coloraxes(colorbar_len=0.2)
         fig_hex_map.update_coloraxes(colorbar_tickfont=dict(color="#323232"))
+
+    
+    
+    elapsed_time = end_time - start_time
+    print(f"Elapsed time (1): {elapsed_time} seconds")
 
     return fig_hex_map
 
@@ -268,8 +286,8 @@ app.layout = html.Div(
                             ),
                             html.H6('Variable'),
                             dcc.Dropdown(
-                                options=['NSE_3', 'NSE_5', 'Poblacion'],
-                                value='NSE_5',
+                                options=constants.CATEGORICAL_VARIABLES+constants.NON_CATEGORICAL_VARIABLES,
+                                value=constants.CATEGORICAL_VARIABLES[1],
                                 id='my-variable-selector',
                                 clearable=False
                             ),

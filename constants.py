@@ -1,9 +1,12 @@
+BOGOTA_STR = 'Bogotá'
+CUENCA_STR = 'Cuenca'
+
 CENTER_CITY_COORDINATES = {
-    'Bogotá': {
+    BOGOTA_STR: {
         'center_lat': 4.7110,
         'center_lon': -74.0721
     },
-    'Cuenca': {
+    CUENCA_STR: {
         'center_lat': -2.891889142459372,
         'center_lon': -78.9889487554136
     }
@@ -19,3 +22,6 @@ SCATTER_ID = "my-scatter"
 MAP_ID = 'my-map'
 CITY_SELECTOR = 'my-city-selector'
 ACCESIBILITY_SELECTOR='my-accesibility-selector'
+
+CATEGORICAL_VARIABLES = ['NSE_3', 'NSE_5']
+NON_CATEGORICAL_VARIABLES = ['Poblacion']
