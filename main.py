@@ -249,11 +249,14 @@ app.layout = html.Div(
                 children=[
                     html.Div(
                         children=[
-                            html.H5("Accesibilidad",
+                            html.H5("Accesibilidad en Bogotá y Cuenca",
                                     className="card-title"),
                             html.P(
-                                "Some quick example text to build on the card title and make "
-                                "up the bulk of the card's content.",
+                        "       Esta plataforma busca responder"
+                                " ¿cómo es la accesibilidad en Bogotá según el tipo de usuario?"
+                                " En la sección de abajo encontrará menus para que juegue y vea"
+                                "qué tan accesibles son las oportunidades para personas"
+                                "según su modo de transporte",
                                 className="card-text",
                             ),
                             html.H6('Ciudad'),
