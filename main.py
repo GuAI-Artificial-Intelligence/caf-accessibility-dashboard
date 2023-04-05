@@ -112,15 +112,6 @@ def update_hex_map(city, fig_hex_map, variable='IndiAcce', df=bogota_cuenca_df_c
             colorbar['ticktext'] = constants.NS5_TICKTEXT
             zmax=5
             colorbar['title'] = '<b>Nivel socio<br>económico</b><br> .'
-        # fig_hex_map.update_traces(
-        #     overwrite=True,
-        #     z=z,
-        #     zmin=0,
-        #     zmax=zmax,
-        #     colorscale='Magma',
-        #     colorbar=colorbar,
-        #     selector=dict(type='choroplethmapbox'),
-        # )
     else:
         z = df[variable]
         indices = np.where(df['city'] == city)
@@ -165,32 +156,20 @@ def get_bar_figure():
     y2 = bogota_cuenca_df_csv[bogota_cuenca_df_csv.IndiAcce=='2. Media Alta'][['NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
     y3 = bogota_cuenca_df_csv[bogota_cuenca_df_csv.IndiAcce=='3. Media Baja'][['NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
     y4 = bogota_cuenca_df_csv[bogota_cuenca_df_csv.IndiAcce=='4. Baja'][['NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
-    
-    
-
-    animals=['giraffes', 'orangutans', 'monkeys']
 
     fig = go.Figure(data=[
         go.Bar(name='Baja', x=nse, y=y4, width=0.4, marker_color='#491874'),
         go.Bar(name='Media-Baja', x=nse, y=y3, width=0.4, marker_color='#a84276' ),
         go.Bar(name='Media-Alta', x=nse, y=y2, width=0.4, marker_color='#eb8f6d'),
         go.Bar(name='Alta', x=nse, y=y1, width=0.4, marker_color='#fcfdc6'),
-        # go.Bar(name='SF Zoo', x=animals, y=[20, 14, 23]),
-        # go.Bar(name='LA Zoo', x=animals, y=[12, 18, 29])
     ])
-    # Change the bar mode
-    
-
-    # fig.update_yaxes(visible=False, showticklabels=False)
-    # fig.update_xaxes(visible=False, showticklabels=False)
     
     fig.update_layout(
         xaxis_title="Nivel socioeconómico",
         yaxis_title="Habitantes",
-        legend_title="Accesibilidad",
-        margin=dict(l=0, r=0, t=20, b=20),
+        legend_title="  Accesibilidad",
+        margin=dict(l=30, r=0, t=30, b=0),
         barmode='stack',
-        # plot_bgcolor='white',
         paper_bgcolor='#323232',
         plot_bgcolor="#323232",
         font=dict(
@@ -198,18 +177,6 @@ def get_bar_figure():
         ),
 
     )
-    
-    # fig.update_layout(showlegend=False)
-
-    # fig.update_traces(marker_sizemin=3, selector=dict(type='scatter'))
-
-    # fig.update_coloraxes(colorbar_orientation='h')
-    # fig.update_coloraxes(colorbar_thickness=10)
-    # fig.update_coloraxes(colorbar_title=dict(text=''))
-    # fig.update_coloraxes(colorbar_y=0.0)
-    # fig.update_coloraxes(colorbar_x=0.5)
-    # fig.update_coloraxes(colorbar_len=0.3)
-    # fig.update_coloraxes(colorbar_tickfont=dict(color="#f4f4f4"))
 
     return fig
 
@@ -228,17 +195,18 @@ app.layout = html.Div(
                 children=[
                     html.Div(
                         children=[
-                            html.H5("Accesibilidad en Bogotá y Cuenca",
+                            html.P('Accesibilidad en Bogotá y Cuenca',
+                                   className='card-subtitle',
+                                   style={'margin-bottom': '26px', 'font-weight': 'bold', 'font-size': '14px'}    
+                                   ),
+                            html.H5("¿Cómo es la accesibilidad en la ciudad según el tipo de usuario?",
                                     className="card-title",
-                                    style={'margin-bottom': '16px', }
+                                    style={'margin-bottom': '12px', 'font-size': '24px'}
                                     ),
                             html.P(
-                        "       Esta plataforma busca responder"
-                                " ¿cómo es la accesibilidad en Bogotá según el tipo de usuario?"
-                                " En la sección de abajo encontrará menus para que juegue y vea"
-                                "qué tan accesibles son las oportunidades para personas"
-                                "según su modo de transporte",
+                                "Interactúe con las opciones de abajo y compruebe qué tan accesibles son las oportunidades para las personas.",
                                 className="card-text",
+                                style={'line-height': '1.2', 'font-size': '15px', 'margin-bottom': '16px'}
                             ),
                             html.H6('Seleccione un ciudad:'),
                             dcc.Dropdown(
@@ -257,7 +225,7 @@ app.layout = html.Div(
                                 ],
                                 value='ACC',
                                 labelStyle={'margin-right': '12px', },
-                                style={'margin-bottom': '12px', },
+                                style={'margin-bottom': '16px', },
                                 id=constants.CATEGORY_SELECTOR,
                             ),
                             
@@ -320,8 +288,8 @@ app.layout = html.Div(
                                         config={
                                             'displayModeBar': False
                                         },
-                                        style={"height": "100%",
-                                               "width": "95%"},
+                                        style={"height": "94%",
+                                               "width": "92%"},
                                     )
                                 ],
                                 className='bar-content'

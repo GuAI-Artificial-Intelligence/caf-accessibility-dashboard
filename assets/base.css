@@ -23,9 +23,10 @@ p {
 
 .panel-control-content {
     /* height: calc(100vh); */
-    width: calc(70%);
-    margin-left: 42px !important;
-    margin-top: 36px !important;
+    width: calc(75%);
+    margin-left: 55px !important;
+    margin-top: 60px !important;
+    /*margin-top: 36px !important; */
     padding: 0px !important;
     /* box-shadow: 2px 2px 2px lightgrey; */
     /* background-color: #f9f9f9; */
@@ -58,6 +59,7 @@ p {
     height: calc(28vh) !important;
     width: calc(100%);
     border: none;
+    margin-left: 30px;
 }
 /* 
 #my-scatter {
