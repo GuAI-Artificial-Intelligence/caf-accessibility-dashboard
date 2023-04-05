@@ -254,7 +254,7 @@ app.layout = html.Div(
                     html.Img(
                             src='assets/images/caf_tumi_numo_logos.png',
                             #style={'width':'75%', 'margin-left':'55px', 'margin-top':'50px', 'position':'absolute', 'bottom':'0px'}
-                            style={'width':'75%', 'margin-left':'55px', 'position':'absolute', 'bottom':'50px'}
+                            style={'width':'100%', 'margin-left':'0px', 'position':'absolute', 'bottom':'0px'}
                             ),
                                     
                 ]
