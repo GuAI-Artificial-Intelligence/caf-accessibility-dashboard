@@ -347,7 +347,7 @@ def update_output_div(city, category, variable):
     
 
 
-
+app.title = 'Accesibilidad'
 
 
 
