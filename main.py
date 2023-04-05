@@ -250,6 +250,13 @@ app.layout = html.Div(
                         ],
                         className='panel-control-content'
                     ),
+                
+                    html.Img(
+                            src='assets/images/caf_tumi_numo_logos.png',
+                            #style={'width':'75%', 'margin-left':'55px', 'margin-top':'50px', 'position':'absolute', 'bottom':'0px'}
+                            style={'width':'75%', 'margin-left':'55px', 'position':'absolute', 'bottom':'50px'}
+                            ),
+                                    
                 ]
             ),
             dbc.Col(
@@ -289,13 +296,14 @@ app.layout = html.Div(
                                             'displayModeBar': False
                                         },
                                         style={"height": "94%",
-                                               "width": "92%"},
+                                               "width": "96%"},
                                     )
                                 ],
                                 className='bar-content'
                             )
                         ],
                     ),
+
                 ],
                 className='map-container'
             ),

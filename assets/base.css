@@ -13,10 +13,15 @@ p {
     line-height: 16px; 
 }
 
+.row {
+    --bs-gutter-x: 0;
+}
+
 .panel-control-container {
     height: calc(100vh);
     padding: 0px;
     background-color: rgb(30, 30, 30);
+    position: relative;
     /* margin-top: 36px;
     margin-left: 50px; */
 }
@@ -57,7 +62,7 @@ p {
 }
 .bar-content {
     height: calc(28vh) !important;
-    width: calc(100%);
+    width: calc(100% - 30px);
     border: none;
     margin-left: 30px;
 }
