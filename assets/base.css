@@ -50,10 +50,23 @@ p {
 
 
 .map-content {
-    height: calc(100vh);
+    height: calc(70vh);
     width: calc(100%);
     border: none;
 }
+.bar-content {
+    height: calc(28vh) !important;
+    width: calc(100%);
+    border: none;
+}
+/* 
+#my-scatter {
+    height: calc(30vh) !important;
+    width: 100% !important;
+    padding: 0 !important;
+    background-color: rgb(52,51,50)
+} */
+
 .card-title {
     margin: 12px 0px;
     font-size: 20px;
