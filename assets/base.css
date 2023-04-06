@@ -10,7 +10,7 @@ body {
 p {
     font-weight: 400;
     font-size: 14px;
-    line-height: 16px; 
+    line-height: 16px;
 }
 
 .row {
@@ -43,8 +43,8 @@ p {
 
 .map-container {
     padding: 0px;
-    background-color: rgb(52,51,50)
-    /* margin-top: 36px;
+    background-color: rgb(52, 51, 50)
+        /* margin-top: 36px;
     margin-left: 16px; */
 }
 
@@ -60,12 +60,14 @@ p {
     width: calc(100%);
     border: none;
 }
+
 .bar-content {
     height: calc(28vh) !important;
     width: calc(100% - 30px);
     border: none;
     margin-left: 30px;
 }
+
 /* 
 #my-scatter {
     height: calc(30vh) !important;
@@ -79,6 +81,7 @@ p {
     font-size: 20px;
     font-weight: bold;
 }
+
 .card-body {
     padding: 0px;
 }
@@ -97,8 +100,8 @@ p {
 .Select-control {
     background-color: rgb(30, 30, 30) !important;
     color: rgb(214, 214, 214) !important;
-  }
-  
+}
+
 .Select-menu-outer {
     background-color: rgb(25, 25, 25);
     color: rgb(214, 214, 214) !important;
@@ -119,7 +122,7 @@ p {
 .modal-body-scroll {
     height: calc(70vh);
     overflow-y: auto;
-  }
+}
 
 .modal-header {
     border-bottom: none;
@@ -136,20 +139,48 @@ p {
 
 .my-tabs .nav-tabs {
     border-bottom: none;
-  }
-  
-  .my-tabs .nav-link {
+}
+
+.my-tabs .nav-link {
     border: none;
     border-radius: 0;
-    color: #fff;
-    background-color: #323232;
-  }
-  
-  .my-tabs .nav-link.active {
-    background-color: #fff;
-    color: #343a40;
-  }
+    color: #DDD;
+    background-color: #1e1e1e;
+    margin-right: 24px;
+}
 
-  .open-notes-link {
+.my-tabs .nav-link.active {
+    background-color: #1e1e1e;
+    color: #FFF;
+    border-bottom: solid 2px #FFF;
+    font-weight: bold;
+}
+
+.open-notes-link {
     margin-top: 30px !important;
-  }
+}
+
+.nav {
+    --bs-nav-link-padding-x: 0;
+    --bs-nav-link-padding-y: 0.7rem;
+    --bs-nav-link-font-weight: ;
+    --bs-nav-link-color: var(--bs-link-color);
+    --bs-nav-link-hover-color: var(--bs-link-hover-color);
+    --bs-nav-link-disabled-color: #6c757d;
+    display: flex;
+    flex-wrap: wrap;
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+}
+
+.nav-tabs {
+    --bs-nav-tabs-border-width: 0;
+    --bs-nav-tabs-border-color: none;
+    --bs-nav-tabs-border-radius: none;
+    --bs-nav-tabs-link-hover-border-color: #e9ecef #e9ecef #dee2e6;
+    --bs-nav-tabs-link-active-color: #495057;
+    --bs-nav-tabs-link-active-bg: #1e1e1e;
+    --bs-nav-tabs-link-active-border-color: #1e1e1e;
+    border-bottom: var(--bs-nav-tabs-border-width) solid var(--bs-nav-tabs-border-color);
+}

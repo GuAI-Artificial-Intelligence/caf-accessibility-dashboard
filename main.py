@@ -53,7 +53,10 @@ def init_map(df=bogota_cuenca_df_csv, geodf=geojson_bogota_cuenca, variable='Ind
             locations=pd.Series(df.index.values).astype(str),
             colorbar=colorbar,
             colorscale='Magma',
-            marker_opacity=1
+            marker_opacity=0.5,
+            customdata=df[['Poblacion', 'NSE_5', 'IndiAcce']],
+            hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> '%{customdata[1]}'<br><b>Accesibilidad:</b> '%{customdata[2]}'",
+            name=''
         )
     )
 
@@ -125,6 +128,8 @@ def update_hex_map(city, fig_hex_map, variable='IndiAcce', df=bogota_cuenca_df_c
         colorscale='Magma',
         colorbar=colorbar,
         selector=dict(type='choroplethmapbox'),
+        customdata=df[['Poblacion', 'NSE_5', 'IndiAcce']],
+        hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> %{customdata[1]}<br><b>Accesibilidad:</b> %{customdata[2]}",
     )
     fig_hex_map.update_layout(
         mapbox_center={
@@ -283,7 +288,8 @@ app.layout = html.Div(
                                 className='modal-content'
                             ),
                             # dbc.Button("Ver notas", id="open", className='notes-button'),
-                            html.A("Consulta la metodología", href="#", id="open-modal-link"),
+                            html.A("Consulta la metodología",
+                                   href="#", id="open-modal-link"),
 
 
 
@@ -434,6 +440,7 @@ def render_tab_content(active_tab):
         return "Content of espacio CAF"
     else:
         return "Unknown tab selected"
+
 
 # Run the app
 if __name__ == '__main__':
