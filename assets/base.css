@@ -13,6 +13,10 @@ p {
     line-height: 16px;
 }
 
+a {
+    color: rgb(72, 155, 248);
+}
+
 .row {
     --bs-gutter-x: 0 !important;
 }
@@ -184,3 +188,4 @@ p {
     --bs-nav-tabs-link-active-border-color: #1e1e1e;
     border-bottom: var(--bs-nav-tabs-border-width) solid var(--bs-nav-tabs-border-color);
 }
+

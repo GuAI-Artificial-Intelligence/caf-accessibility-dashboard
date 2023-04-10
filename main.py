@@ -29,12 +29,23 @@ from conf.credentials import MAPBOX_TOKEN
 
 current_path = Path()
 
-
-bogota_cuenca_df_csv = pd.read_csv(
-    current_path / 'data' / 'bogota_cuenca_v1.csv')
-bogota_cuenca_gdf_geo = gpd.read_file(
-    current_path / 'data' / 'bogota_cuenca_geo_v1.geojson',
+# bogota_cuenca_df_csv = pd.read_csv(
+#     current_path / 'data' / 'bogota_cuenca_v1.csv')
+bogota_cuenca_df_csv = pd.read_parquet(
+    current_path / 'data' / 'bogota_cuenca_v1.parquet'
 )
+
+# bogota_cuenca_gdf_geo = gpd.read_file(
+#     current_path / 'data' / 'bogota_cuenca_geo_v1.geojson',
+# )
+bogota_cuenca_gdf_geo = gpd.read_parquet(
+    current_path / 'data' / 'bogota_cuenca_geo_v1.parquet',
+)
+
+# bogota_cuenca_gdf_geo.to_parquet(
+#     current_path / 'data' / 'bogota_cuenca_geo_v1.parquet',
+# )
+# bogota_cuenca_df_csv.to_parquet(current_path / 'data' / 'bogota_cuenca_v1.parquet')
 
 geojson_bogota_cuenca = bogota_cuenca_gdf_geo.geometry
 
@@ -52,8 +63,8 @@ def init_map(df=bogota_cuenca_df_csv, geodf=geojson_bogota_cuenca, variable='Ind
             z=z,
             locations=pd.Series(df.index.values).astype(str),
             colorbar=colorbar,
-            colorscale='Magma',
-            marker_opacity=0.5,
+            colorscale=constants.INDIACCE_COLORSCALE,
+            marker_opacity=1,
             customdata=df[['Poblacion', 'NSE_5', 'IndiAcce']],
             hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> '%{customdata[1]}'<br><b>Accesibilidad:</b> '%{customdata[2]}'",
             name=''
@@ -98,6 +109,8 @@ def update_hex_map(city, fig_hex_map, variable='IndiAcce', df=bogota_cuenca_df_c
     if city == constants.CUENCA_STR:
         zoom = 11.5
 
+    colorscale = 'Brwnyl'
+
     if nse_variable:
         colorbar = constants.CATEGORICAL_COLORBAR
         if variable == constants.CATEGORICAL_VARIABLES[0]:
@@ -106,12 +119,14 @@ def update_hex_map(city, fig_hex_map, variable='IndiAcce', df=bogota_cuenca_df_c
             colorbar['ticktext'] = constants.INDIACCE_TICKTEXT
             zmax = 4
             colorbar['title'] = '<b>Accesibilidad</b><br> .'
+            colorscale = constants.INDIACCE_COLORSCALE
         if variable == constants.CATEGORICAL_VARIABLES[1]:
             z = df[variable].map(constants.NSE_5_DICTMAP).values
             colorbar['tickvals'] = constants.NS5_TICKVALS
             colorbar['ticktext'] = constants.NS5_TICKTEXT
             zmax = 5
             colorbar['title'] = '<b>Nivel socio<br>económico</b><br> .'
+
     else:
         z = df[variable]
         indices = np.where(df['city'] == city)
@@ -125,7 +140,7 @@ def update_hex_map(city, fig_hex_map, variable='IndiAcce', df=bogota_cuenca_df_c
         z=z,
         zmin=0,
         zmax=zmax,
-        colorscale='Magma',
+        colorscale=colorscale,
         colorbar=colorbar,
         selector=dict(type='choroplethmapbox'),
         customdata=df[['Poblacion', 'NSE_5', 'IndiAcce']],
@@ -162,12 +177,23 @@ def get_bar_figure():
         'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
 
     fig = go.Figure(data=[
-        go.Bar(name='Baja', x=nse, y=y4, width=0.4, marker_color='#491874'),
-        go.Bar(name='Media-Baja', x=nse, y=y3,
-               width=0.4, marker_color='#a84276'),
-        go.Bar(name='Media-Alta', x=nse, y=y2,
-               width=0.4, marker_color='#eb8f6d'),
-        go.Bar(name='Alta', x=nse, y=y1, width=0.4, marker_color='#fcfdc6'),
+        go.Bar(
+            name='Baja', x=nse, y=y4, width=0.4, marker_color='#b23d37',
+            hoverinfo='none'
+        ),
+
+        go.Bar(
+            name='Media-Baja', x=nse, y=y3, width=0.4, marker_color='#c37a3b',
+            hoverinfo='none'
+        ),
+        go.Bar(
+            name='Media-Alta', x=nse, y=y2, width=0.4, marker_color='#95b14f',
+            hoverinfo='none'
+        ),
+        go.Bar(
+            name='Alta', x=nse, y=y1, width=0.4, marker_color='#5ebc4b',
+            hoverinfo='none'
+        ),
     ])
 
     fig.update_layout(
@@ -189,7 +215,8 @@ def get_bar_figure():
 
 # Create a Dash app
 app = Dash(
-    external_stylesheets=['assets/base.css', dbc.themes.BOOTSTRAP]
+    external_stylesheets=['assets/base.css',
+                          dbc.themes.BOOTSTRAP,  dbc.icons.BOOTSTRAP]
 )
 app.title = 'Accesibilidad'
 app.layout = html.Div(
@@ -260,17 +287,18 @@ app.layout = html.Div(
                                             dbc.Tabs(
                                                 [
                                                     dbc.Tab(
-                                                        label="Acerca de", tab_id="tab-1", className=""),
+                                                        label="Acerca de", tab_id="tab-1", className="nav-link"),
                                                     dbc.Tab(
-                                                        label="Metodología", tab_id="tab-2", className="nav-link btn"),
+                                                        label="Metodología", tab_id="tab-2", className="nav-link"),
                                                     dbc.Tab(
-                                                        label="Espacio CAF", tab_id="tab-3", className="nav-link btn"),
+                                                        label="Espacio CAF", tab_id="tab-3", className="nav-link"),
                                                 ],
                                                 id="modal-tabs",
                                                 active_tab="tab-1",
                                                 className="my-tabs"
                                             )
-                                        ]
+                                        ],
+                                        style={'margin-left':'50px'}
                                     ),
                                     dbc.ModalBody(
                                         "This modal takes most of the vertical space of the page.",
@@ -279,17 +307,25 @@ app.layout = html.Div(
                                     ),
                                     dbc.ModalFooter(
                                         dbc.Button("Cerrar", id="close",
-                                                   className="ml-auto")
+                                                   className="ml-auto", style={'background-color':'rgb(72, 155, 248)'})
                                     ),
                                 ],
                                 id="modal",
                                 size="xl",
                                 backdrop=True,
-                                className='modal-content'
+                                className='modal-content',
+                                
                             ),
-                            # dbc.Button("Ver notas", id="open", className='notes-button'),
-                            html.A("Consulta la metodología",
-                                   href="#", id="open-modal-link"),
+                            # dbc.Button("Sobre este tablero", id="open", className='notes-button btn-dark'),
+
+                            html.A(children=[
+                                html.I(className="bi bi-patch-question-fill me-2"),
+                                "Sobre este tablero"
+                            ],
+                                href="#", id="open-modal-link",
+                            ),
+
+
 
 
 
@@ -433,11 +469,11 @@ def toggle_modal(n1, n2, is_open):
 )
 def render_tab_content(active_tab):
     if active_tab == "tab-1":
-        return "Content of Acerca de"
+        return constants.ACERCA_DE_BODY_CONTENT
     elif active_tab == "tab-2":
-        return "Content of Metodologia"
+        return constants.ACERCA_DE_BODY_METODOLOGIA
     elif active_tab == "tab-3":
-        return "Content of espacio CAF"
+        return constants.ESPACIO_CAF_BODY_METODOLOGIA
     else:
         return "Unknown tab selected"
 
