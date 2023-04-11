@@ -70,6 +70,7 @@ a {
     width: calc(100% - 30px);
     border: none;
     margin-left: 30px;
+    /* margin-top: 20px; */
 }
 
 /* 
@@ -189,3 +190,13 @@ a {
     border-bottom: var(--bs-nav-tabs-border-width) solid var(--bs-nav-tabs-border-color);
 }
 
+.btn-outline-primary {
+    --bs-btn-color: rgb(72, 155, 248);
+    --bs-btn-border-color: rgb(72, 155, 248);
+}
+
+.btn-outline-primary.active {
+    background-color: rgb(72, 155, 248) !important;
+    color: white !important;
+    border-color: rgb(72, 155, 248) !important;
+}

@@ -29,30 +29,18 @@ from conf.credentials import MAPBOX_TOKEN
 
 current_path = Path()
 
-# bogota_cuenca_df_csv = pd.read_csv(
-#     current_path / 'data' / 'bogota_cuenca_v1.csv')
-bogota_cuenca_df_csv = pd.read_parquet(
-    current_path / 'data' / 'bogota_cuenca_v1.parquet'
+
+bogota_cuenca_df_parquet = pd.read_parquet(
+    current_path / 'data' / 'bogota_cuenca_v2.parquet'
 )
 
-# bogota_cuenca_gdf_geo = gpd.read_file(
-#     current_path / 'data' / 'bogota_cuenca_geo_v1.geojson',
-# )
 bogota_cuenca_gdf_geo = gpd.read_parquet(
-    current_path / 'data' / 'bogota_cuenca_geo_v1.parquet',
+    current_path / 'data' / 'bogota_cuenca_geo_v2.parquet',
 )
 
-# bogota_cuenca_gdf_geo.to_parquet(
-#     current_path / 'data' / 'bogota_cuenca_geo_v1.parquet',
-# )
-# bogota_cuenca_df_csv.to_parquet(current_path / 'data' / 'bogota_cuenca_v1.parquet')
 
-geojson_bogota_cuenca = bogota_cuenca_gdf_geo.geometry
-
-
-def init_map(df=bogota_cuenca_df_csv, geodf=geojson_bogota_cuenca, variable='IndiAcce', city=constants.BOGOTA_STR):
+def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry, variable='IndiAcce_1', city=constants.BOGOTA_STR):
     z = df[variable].map(constants.INDIACCE_DICTMAP).values
-    # z = df[variable]
     colorbar = constants.CATEGORICAL_COLORBAR
     colorbar['tickvals'] = constants.INDIACCE_TICKVALS
     colorbar['ticktext'] = constants.INDIACCE_TICKTEXT
@@ -65,7 +53,7 @@ def init_map(df=bogota_cuenca_df_csv, geodf=geojson_bogota_cuenca, variable='Ind
             colorbar=colorbar,
             colorscale=constants.INDIACCE_COLORSCALE,
             marker_opacity=1,
-            customdata=df[['Poblacion', 'NSE_5', 'IndiAcce']],
+            customdata=df[['Poblacion', 'NSE_5', 'IndiAcce_1']],
             hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> '%{customdata[1]}'<br><b>Accesibilidad:</b> '%{customdata[2]}'",
             name=''
         )
@@ -84,7 +72,7 @@ def init_map(df=bogota_cuenca_df_csv, geodf=geojson_bogota_cuenca, variable='Ind
 
 
 fig_hex_map = init_map()
-
+fig_below_map = go.Figure()
 
 # end_time2 = time.time()
 
@@ -94,7 +82,21 @@ fig_hex_map = init_map()
 # print(f"Elapsed time (3): {elapsed_time2} seconds")
 
 
-def update_hex_map(city, fig_hex_map, variable='IndiAcce', df=bogota_cuenca_df_csv):
+def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0],
+                   df=bogota_cuenca_df_parquet, filter={'all': True},
+                   geodf=bogota_cuenca_gdf_geo):
+
+    if not filter['all']:
+        dfs = list()
+        for nse in filter['selected']:
+            mask = df[constants.CATEGORICAL_VARIABLES[1]] == nse
+            mask = mask & df[constants.CATEGORICAL_VARIABLES[0]].isin(
+                filter['selected'][nse])
+            temp_df = df[mask]
+            dfs.append(temp_df)
+        df = pd.concat(dfs).copy()
+        geodf = geodf[geodf.hex.isin(df.hex)].copy()
+        geodf = geodf.geometry
 
     lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
     lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
@@ -135,17 +137,34 @@ def update_hex_map(city, fig_hex_map, variable='IndiAcce', df=bogota_cuenca_df_c
         colorbar['title'] = f'<b>{variable}</b><br> .'
         colorbar['tickmode'] = 'auto'
 
-    fig_hex_map.update_traces(
-        overwrite=True,
+    trace = go.Choroplethmapbox(
+        geojson=json.loads(geodf.to_json()),
         z=z,
-        zmin=0,
-        zmax=zmax,
-        colorscale=colorscale,
+        # zmin=0,
+        # zmax=zmax,
+        locations=pd.Series(df.index.values).astype(str),
         colorbar=colorbar,
-        selector=dict(type='choroplethmapbox'),
-        customdata=df[['Poblacion', 'NSE_5', 'IndiAcce']],
-        hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> %{customdata[1]}<br><b>Accesibilidad:</b> %{customdata[2]}",
+        colorscale=colorscale,
+        marker_opacity=1,
+        customdata=df[['Poblacion', 'NSE_5', 'IndiAcce_1']],
+        hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> '%{customdata[1]}'<br><b>Accesibilidad:</b> '%{customdata[2]}'",
+        name=''
     )
+    fig_hex_map.update(data=[trace])
+
+    # fig_hex_map.update_traces(
+    #     geojson=json.loads(geodf.to_json()),
+    #     overwrite=True,
+    #     z=z,
+    #     zmin=0,
+    #     zmax=zmax,
+    #     colorscale=colorscale,
+    #     colorbar=colorbar,
+    #     selector=dict(type='choroplethmapbox'),
+    #     customdata=df[['Poblacion', 'NSE_5', 'IndiAcce_1']],
+    #     hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> %{customdata[1]}<br><b>Accesibilidad:</b> %{customdata[2]}",
+    # )
+
     fig_hex_map.update_layout(
         mapbox_center={
             "lat": lat,
@@ -159,7 +178,7 @@ def update_hex_map(city, fig_hex_map, variable='IndiAcce', df=bogota_cuenca_df_c
 
 def get_bar_figure():
 
-    nse = bogota_cuenca_df_csv.NSE_5.unique()
+    nse = bogota_cuenca_df_parquet.NSE_5.unique()
     nse = [
         '1 - Alto',
         '2 - Medio-Alto',
@@ -167,36 +186,60 @@ def get_bar_figure():
         '4 - Medio-Bajo',
         '5 - Bajo'
     ]
-    y1 = bogota_cuenca_df_csv[bogota_cuenca_df_csv.IndiAcce == '1. Alta'][[
+    y1 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet.IndiAcce_1 == '1. Alta'][[
         'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
-    y2 = bogota_cuenca_df_csv[bogota_cuenca_df_csv.IndiAcce == '2. Media Alta'][[
+    y2 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet.IndiAcce_1 == '2. Media Alta'][[
         'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
-    y3 = bogota_cuenca_df_csv[bogota_cuenca_df_csv.IndiAcce == '3. Media Baja'][[
+    y3 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet.IndiAcce_1 == '3. Media Baja'][[
         'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
-    y4 = bogota_cuenca_df_csv[bogota_cuenca_df_csv.IndiAcce == '4. Baja'][[
+    y4 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet.IndiAcce_1 == '4. Baja'][[
         'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
 
-    fig = go.Figure(data=[
-        go.Bar(
-            name='Baja', x=nse, y=y4, width=0.4, marker_color='#b23d37',
-            hoverinfo='none'
-        ),
+    # fig = go.Figure(
+    #     data=[
+    #         go.Bar(
+    #             name='Baja', x=nse, y=y4, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[0],
+    #             hoverinfo='none'
+    #         ),
 
-        go.Bar(
-            name='Media-Baja', x=nse, y=y3, width=0.4, marker_color='#c37a3b',
-            hoverinfo='none'
-        ),
-        go.Bar(
-            name='Media-Alta', x=nse, y=y2, width=0.4, marker_color='#95b14f',
-            hoverinfo='none'
-        ),
-        go.Bar(
-            name='Alta', x=nse, y=y1, width=0.4, marker_color='#5ebc4b',
-            hoverinfo='none'
-        ),
-    ])
+    #         go.Bar(
+    #             name='Media-Baja', x=nse, y=y3, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[1],
+    #             hoverinfo='none'
+    #         ),
+    #         go.Bar(
+    #             name='Media-Alta', x=nse, y=y2, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[2],
+    #             hoverinfo='none'
+    #         ),
+    #         go.Bar(
+    #             name='Alta', x=nse, y=y1, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[3],
+    #             hoverinfo='none'
+    #         ),
+    #     ],
+    # )
 
-    fig.update_layout(
+    fig_below_map.update(
+        data=[
+            go.Bar(
+                name='4. Baja', x=nse, y=y4, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[0],
+                hoverinfo='none'
+            ),
+
+            go.Bar(
+                name='3. Media Baja', x=nse, y=y3, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[1],
+                hoverinfo='none'
+            ),
+            go.Bar(
+                name='2. Media Alta', x=nse, y=y2, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[2],
+                hoverinfo='none'
+            ),
+            go.Bar(
+                name='1. Alta', x=nse, y=y1, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[3],
+                hoverinfo='none'
+            ),
+        ]
+    )
+
+    fig_below_map.update_layout(
         xaxis_title="Nivel socioeconómico",
         yaxis_title="Habitantes",
         legend_title="  Accesibilidad",
@@ -207,10 +250,10 @@ def get_bar_figure():
         font=dict(
             color="white"
         ),
-
+        dragmode='select',
     )
 
-    return fig
+    return fig_below_map
 
 
 # Create a Dash app
@@ -222,6 +265,7 @@ app.title = 'Accesibilidad'
 app.layout = html.Div(
     [dbc.Row(
         children=[
+
             dbc.Col(
                 width=4,
                 className='panel-control-container',
@@ -273,7 +317,7 @@ app.layout = html.Div(
                                 options=[
                                     # {'label': 'Nivel socioeconómico', 'value': 'NSE_5'},
                                     {'label': 'Índice de accesibilidad',
-                                        'value': 'IndiAcce'},
+                                     'value': 'IndiAcce_1'},
                                 ],
                                 value=constants.CATEGORICAL_VARIABLES[0],
                                 id=constants.VARIABLE_SELECTOR,
@@ -291,14 +335,14 @@ app.layout = html.Div(
                                                     dbc.Tab(
                                                         label="Metodología", tab_id="tab-2", className="nav-link"),
                                                     dbc.Tab(
-                                                        label="Espacio CAF", tab_id="tab-3", className="nav-link"),
+                                                        label="Proyecto TUMI Data Hub", tab_id="tab-3", className="nav-link"),
                                                 ],
                                                 id="modal-tabs",
                                                 active_tab="tab-1",
                                                 className="my-tabs"
                                             )
                                         ],
-                                        style={'margin-left':'50px'}
+                                        style={'margin-left': '50px'}
                                     ),
                                     dbc.ModalBody(
                                         "This modal takes most of the vertical space of the page.",
@@ -307,27 +351,24 @@ app.layout = html.Div(
                                     ),
                                     dbc.ModalFooter(
                                         dbc.Button("Cerrar", id="close",
-                                                   className="ml-auto", style={'background-color':'rgb(72, 155, 248)'})
+                                                   className="ml-auto", style={'background-color': 'rgb(72, 155, 248)'})
                                     ),
                                 ],
                                 id="modal",
                                 size="xl",
                                 backdrop=True,
                                 className='modal-content',
-                                
+
                             ),
                             # dbc.Button("Sobre este tablero", id="open", className='notes-button btn-dark'),
 
                             html.A(children=[
-                                html.I(className="bi bi-patch-question-fill me-2"),
+                                html.I(
+                                    className="bi bi-patch-question-fill me-2"),
                                 "Sobre este tablero"
                             ],
                                 href="#", id="open-modal-link",
                             ),
-
-
-
-
 
 
                             # html.H6('Medio de acceso'),
@@ -350,11 +391,15 @@ app.layout = html.Div(
 
                 ]
             ),
+
+
+
             dbc.Col(
                 width=8,
                 children=[
                     dbc.Row(
                         children=[
+
                             html.Div(
                                 children=[
                                     dcc.Graph(
@@ -374,22 +419,96 @@ app.layout = html.Div(
                     dbc.Row(
                         children=[
                             html.Div(
-                                # html.P("Seleccione un punto de la gráfica para ver los datos de una localidad.", className='graph-selector-text'),
-                                children=[dcc.Graph(
-                                    id=constants.SCATTER_ID,
-                                    figure=get_bar_figure(),
-                                    # figure=get_selector_graph(
-                                    #     list(constants.CENTER_CITY_COORDINATES.keys())[0],
-                                    #     list(constants.ACCESIBILITY_MEANS.keys())[0]
-                                    # ),
-                                    config={
-                                        'displayModeBar': False
-                                    },
-                                    style={"height": "94%",
-                                           "width": "96%"},
-                                )
+                                children=[
+                                    dcc.Graph(
+                                        id=constants.SCATTER_ID,
+                                        figure=get_bar_figure(),
+                                        config={
+                                            'displayModeBar': False
+                                        },
+                                        style={"height": "94%",
+                                               "width": "96%",
+                                               'margin-top': '26px',
+                                               },
+                                    ),
+                                    dbc.RadioItems(
+                                        id="radios",
+                                        className="btn-group",
+                                        inputClassName="btn-check",
+                                        labelClassName="btn btn-outline-primary btn-sm",
+                                        labelCheckedClassName="active",
+                                        options=[
+                                            {"label": "Nivel socieconómico",
+                                                "value": 1},
+                                            {"label": "Option 2", "value": 2},
+                                            # {"label": "Option 3", "value": 3},
+                                        ],
+                                        value=1,
+                                        style={
+                                            # 'width': '200px',
+                                            'position': 'absolute',
+                                            'top': 0,
+                                            'left': 0,
+                                            'z-index': 1000,
+                                            'margin-top': '12px',
+                                            'background-color': '#323232',
+                                            # "height": "20px"
+                                        },
+
+                                    ),
+                                    # dbc.ButtonGroup(
+                                    #     [dbc.Button("Left"), dbc.Button(
+                                    #         "Middle"), dbc.Button("Right")],
+                                    #     style={
+                                    #         # 'width': '200px',
+                                    #         'position': 'absolute',
+                                    #         'top': 0,
+                                    #         'left': 0,
+                                    #         'z-index': 1000,
+                                    #         'margin-top': '8px',
+                                    #         'background-color': '#323232',
+                                    #         # "height": "20px"
+                                    #     },
+                                    #     size="sm",
+                                    # )
+
+                                    # dbc.Button(
+                                    #     "Nivel socioeconómico",
+                                    #     style={
+                                    #         # 'width': '200px',
+                                    #         'position': 'absolute',
+                                    #         'top': 0,
+                                    #         'left': 0,
+                                    #         'z-index': 1000,
+                                    #         'margin-top': '8px',
+                                    #         'background-color': '#323232',
+                                    #         # "height": "20px"
+                                    #     },
+
+                                    # )
+                                    # dcc.Dropdown(
+                                    #     options=[
+                                    #         {'label': 'Nivel socioeconómico',
+                                    #          'value': 'NSE_5'},
+
+                                    #     ],
+                                    #     value='NSE_5',
+                                    #     clearable=False,
+                                    #     style={
+                                    #         'width': '200px',
+                                    #         'position': 'absolute',
+                                    #         'top': 0,
+                                    #         'left': 0,
+                                    #         'z-index': 1000,
+                                    #         'margin-top': '8px',
+                                    #         'background-color': '#323232',
+                                    #         "height": "20px"
+                                    #     },
+                                    # )
+
                                 ],
-                                className='bar-content'
+                                className='bar-content',
+                                style={'position': 'relative'}
                             )
                         ],
                     ),
@@ -417,21 +536,38 @@ app.layout = html.Div(
         Input(component_id=constants.CATEGORY_SELECTOR,
               component_property='value'),
         Input(component_id=constants.VARIABLE_SELECTOR,
-              component_property='value')
+              component_property='value'),
+        Input(constants.SCATTER_ID, 'selectedData')
 
     ],
-    # Input(component_id=constants.ACCESIBILITY_SELECTOR,
-    #       component_property='value'),
-    # Input(component_id=constants.SCATTER_ID,
-    #       component_property='hoverData'),
-
 )
-def update_output_div(city, category, variable):
+def update_output_div(city, category, variable, belowGraphSelectedData):
     triggered_input = ctx.triggered_id
+
+    if (triggered_input == constants.SCATTER_ID):
+        if (belowGraphSelectedData is not None):
+            nse_selection = {
+                'all': False,
+                'selected': dict()
+            }
+            for selection in belowGraphSelectedData['points']:
+                accesibilidad = fig_below_map['data'][selection['curveNumber']]['name']
+                nse = selection['x']
+                if nse not in nse_selection['selected']:
+                    nse_selection['selected'][nse] = set()
+                nse_selection['selected'][nse].add(accesibilidad)
+        else:
+            nse_selection = {
+                'all': True,
+            }
+
+        return dash.no_update, dash.no_update, update_hex_map(
+            city=city, fig_hex_map=fig_hex_map, variable=variable, filter=nse_selection)
+
     if triggered_input == constants.CATEGORY_SELECTOR:
         if category == 'ACC':
             variable_options = [
-                {'label': 'Índice de accesibilidad', 'value': 'IndiAcce'},]
+                {'label': 'Índice de accesibilidad', 'value': 'IndiAcce_1'},]
             variable = constants.CATEGORICAL_VARIABLES[0]
         if category == 'POB':
             variable_options = [
@@ -439,17 +575,6 @@ def update_output_div(city, category, variable):
             variable = constants.CATEGORICAL_VARIABLES[1]
         return variable_options, variable, update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable)
     return dash.no_update, dash.no_update, update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable)
-
-
-# @app.callback(
-#     Output("modal", "is_open"),
-#     [Input("open", "n_clicks"), Input("close", "n_clicks")],
-#     [State("modal", "is_open")],
-# )
-# def toggle_modal(n1, n2, is_open):
-#     if n1 or n2:
-#         return not is_open
-#     return is_open
 
 
 @app.callback(
@@ -476,6 +601,26 @@ def render_tab_content(active_tab):
         return constants.ESPACIO_CAF_BODY_METODOLOGIA
     else:
         return "Unknown tab selected"
+
+# ---
+
+# Create a callback function to handle the selection event
+
+
+# @app.callback(
+#     Output(component_id=constants.MAP_ID, component_property='figure'),
+#     Input(constants.SCATTER_ID, 'selectedData'))
+# def handle_selection(selectedData):
+#     print(selectedData)
+#     # if selectedData is not None:
+#     #     x_values = [point['x'] for point in selectedData['points']]
+#     #     y_values = [point['y'] for point in selectedData['points']]
+#     #     return dash.no_update
+#     # else:
+#     #     return dash.no_update
+#     return dash.no_update
+
+# ---
 
 
 # Run the app

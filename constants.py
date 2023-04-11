@@ -28,7 +28,7 @@ ACCESIBILITY_SELECTOR = 'my-accesibility-selector'
 CATEGORY_SELECTOR = 'my-category-selector'
 VARIABLE_SELECTOR = 'my-variable-selector'
 
-CATEGORICAL_VARIABLES = ['IndiAcce', 'NSE_5']
+CATEGORICAL_VARIABLES = ['IndiAcce_1', 'NSE_5']
 NON_CATEGORICAL_VARIABLES = ['Poblacion']
 
 NSE_3_DICTMAP = {
@@ -62,7 +62,8 @@ NS5_TICKTEXT = ['Bajo', 'Medio-Bajo', 'Medio', 'Medio-Alto', 'Alto']
 
 INDIACCE_TICKVALS = [1, 2, 3, 4]
 INDIACCE_TICKTEXT = ['Baja', 'Media Baja', 'Media Alta', 'Alta']
-INDIACCE_COLORSCALE = ['#b23d37', '#c37a3b', '#95b14f', '#5ebc4b',]
+# INDIACCE_COLORSCALE = ['#b23d37', '#c37a3b', '#95b14f', '#5ebc4b',]
+INDIACCE_COLORSCALE = ['#b23d37', '#c37a3b', '#95b14f', '#3a8447',]
 
 
 CATEGORICAL_COLORBAR = dict(
@@ -83,7 +84,7 @@ ACERCA_DE_BODY_CONTENT = html.Div(
                    'font-size': '24px'}
         ),
         html.P(
-                "La accesibilidad urbana se refiere a la facilidad con la que los habitantes de una ciudad pueden acceder a bienes, servicios, actividades y destinos. Esta accesibilidad está condicionada por factores como la desigualdad territorial y el sistema de movilidad en la ciudad. Por lo tanto, características como la disponibilidad de transporte público, la distancia a los centros importantes y la propiedad de un vehículo particular, pueden afectar la accesibilidad de los ciudadanos y favorecer a ciertos grupos socioeconómicos sobre otros.",
+            "La accesibilidad urbana se refiere a la facilidad con la que los habitantes de una ciudad pueden acceder a bienes, servicios, actividades y destinos. Esta accesibilidad está condicionada por factores como la desigualdad territorial y el sistema de movilidad en la ciudad. Por lo tanto, características como la disponibilidad de transporte público, la distancia a los centros importantes y la propiedad de un vehículo particular, pueden afectar la accesibilidad de los ciudadanos y favorecer a ciertos grupos socioeconómicos sobre otros.",
             style={'line-height': '1.2',
                    'font-size': '15px', 'margin-bottom': '16px'}
         ),
@@ -157,20 +158,19 @@ ACERCA_DE_BODY_METODOLOGIA = html.Div(
             style={'line-height': '1.2',
                    'font-size': '15px', 'margin-bottom': '30px'}
         ),
-        # html.H5(
-        #     "Análisis de accesibilidad",
-        #     className="card-title",
-        #     style={'margin-bottom': '16px',
-        #            'margin-top': '0',
-        #            'font-size': '24px'}
-        # ),
-        # html.P(
-        #     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
-        #     style={'line-height': '1.2',
-        #            'font-size': '15px', 'margin-bottom': '30px', }
-        # ),
         html.H5(
             "Cálculo de accesibilidad",
+            className="card-title",
+            style={'margin-bottom': '16px',
+                   'font-size': '24px'}
+        ),
+        html.P(
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
+            style={'line-height': '1.2',
+                   'font-size': '15px', 'margin-bottom': '30px', }
+        ),
+        html.H5(
+            "Cómo interpretar los resultados",
             className="card-title",
             style={'margin-bottom': '16px',
                    'font-size': '24px'}
@@ -202,14 +202,19 @@ ACERCA_DE_BODY_METODOLOGIA = html.Div(
 
 ESPACIO_CAF_BODY_METODOLOGIA = html.Div(
     children=[
-    #     html.H5(
-    #         "Fuentes de datos",
-    #         className="card-title",
-    #         style={'margin-bottom': '16px',
-    #                'font-size': '24px'}
-    #     ),
+        #     html.H5(
+        #         "Fuentes de datos",
+        #         className="card-title",
+        #         style={'margin-bottom': '16px',
+        #                'font-size': '24px'}
+        #     ),
         html.P(
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
+            "A través del uso y valorización de los datos de movilidad, CAF y TUMI se unieron para implementar el Proyecto “Mobility Data Hub - Datos abiertos para una movilidad sostenible e inclusiva en América Latina”, con el fin de sembrar las semillas de la transformación digital de la movilidad urbana en la región.",
+            style={'line-height': '1.2',
+                   'font-size': '15px', 'margin-bottom': '30px'}
+        ),
+        html.P(
+            "CAF y TUMI, junto a sus socios de ejecución técnica NUMO (New Urban Mobility Initiative) han definido conceptualmente el proyecto Mobility Data Hub, el cual se ejecutará a través de tres componentes: Mobility Data Hub, pilotos en ciudades e investigación académica. Esta aplicación es parte del primer componente del proyecto.",
             style={'line-height': '1.2',
                    'font-size': '15px', 'margin-bottom': '30px'}
         ),
