@@ -200,3 +200,8 @@ a {
     color: white !important;
     border-color: rgb(72, 155, 248) !important;
 }
+
+.form-check {
+    padding-left: 0px;
+    padding-right: 12px;
+}

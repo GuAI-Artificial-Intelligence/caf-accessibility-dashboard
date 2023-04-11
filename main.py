@@ -9,6 +9,7 @@ import sys
 import pandas as pd
 import geopandas as gpd
 import numpy as np
+from shapely.ops import unary_union
 
 # Plotly
 import plotly.express as px
@@ -38,6 +39,55 @@ bogota_cuenca_gdf_geo = gpd.read_parquet(
     current_path / 'data' / 'bogota_cuenca_geo_v2.parquet',
 )
 
+hospitales_gdf = gpd.read_parquet(
+    current_path / 'data' / 'Bogota_SaluHosp.parquet'
+)
+
+espacios_verdes_gdf = gpd.read_parquet(
+    current_path / 'data' / 'Bogota_EspaVerd.parquet'
+)
+
+
+def add_infraestructure_trace(fig, infra_traces):
+    new_traces = [trace for trace in fig.data if trace['name']
+                  == constants.MAP_TRACE_NAME]
+    if len(infra_traces) != 0:
+        for i, value in enumerate(infra_traces):
+
+            if value == constants.HOSPITAL_TRACE_NAME:
+                trace = go.Scattermapbox(
+                    lat=hospitales_gdf.geometry.y,
+                    lon=hospitales_gdf.geometry.x,
+                    mode="markers",
+                    marker=dict(
+                        size=5,
+                        color="blue"
+                    ),
+                    name=constants.HOSPITAL_TRACE_NAME
+                )
+            if value == constants.ESPACIOS_VERDES_TRACE_NAME:
+                trace_gdf = espacios_verdes_gdf.copy()
+                trace_gdf['z'] = 1
+                trace = go.Choroplethmapbox(
+                    geojson=json.loads(espacios_verdes_gdf.geometry.to_json()),
+                    z=trace_gdf['z'].values,
+                    zmax=1,
+                    zmin=1,
+                    marker_line_width=0,
+                    locations=espacios_verdes_gdf.index.values.astype(str),
+                    colorbar=constants.HIDDEN_COLORBAR,
+                    colorscale=constants.HIDDEN_COLORSCALE,
+                    marker_opacity=0.5,
+                    # customdata=df[['Poblacion', 'NSE_5', 'IndiAcce_1']],
+                    # hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> '%{customdata[1]}'<br><b>Accesibilidad:</b> '%{customdata[2]}'",
+                    name=constants.ESPACIOS_VERDES_TRACE_NAME
+                )
+                fig.update_layout(coloraxis_showscale=False)
+
+            new_traces.append(trace)
+
+    return fig.update(data=new_traces, overwrite=True)
+
 
 def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry, variable='IndiAcce_1', city=constants.BOGOTA_STR):
     z = df[variable].map(constants.INDIACCE_DICTMAP).values
@@ -52,10 +102,10 @@ def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry, 
             locations=pd.Series(df.index.values).astype(str),
             colorbar=colorbar,
             colorscale=constants.INDIACCE_COLORSCALE,
-            marker_opacity=1,
+            marker_opacity=0.5,
             customdata=df[['Poblacion', 'NSE_5', 'IndiAcce_1']],
             hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> '%{customdata[1]}'<br><b>Accesibilidad:</b> '%{customdata[2]}'",
-            name=''
+            name=constants.MAP_TRACE_NAME
         )
     )
 
@@ -73,6 +123,8 @@ def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry, 
 
 fig_hex_map = init_map()
 fig_below_map = go.Figure()
+
+# add_infraestructure_trace(hospitales_gdf, fig_hex_map)
 
 # end_time2 = time.time()
 
@@ -145,12 +197,14 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
         locations=pd.Series(df.index.values).astype(str),
         colorbar=colorbar,
         colorscale=colorscale,
-        marker_opacity=1,
+        marker_opacity=0.5,
         customdata=df[['Poblacion', 'NSE_5', 'IndiAcce_1']],
         hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> '%{customdata[1]}'<br><b>Accesibilidad:</b> '%{customdata[2]}'",
-        name=''
+        name=constants.MAP_TRACE_NAME
     )
-    fig_hex_map.update(data=[trace])
+    data = list(fig_hex_map.data)
+    data[0] = trace
+    fig_hex_map.update(data=data, overwrite=True)
 
     # fig_hex_map.update_traces(
     #     geojson=json.loads(geodf.to_json()),
@@ -262,8 +316,9 @@ app = Dash(
                           dbc.themes.BOOTSTRAP,  dbc.icons.BOOTSTRAP]
 )
 app.title = 'Accesibilidad'
-app.layout = html.Div(
-    [dbc.Row(
+app.layout = dcc.Loading(
+    type='graph',
+    children=[dbc.Row(
         children=[
 
             dbc.Col(
@@ -300,13 +355,16 @@ app.layout = html.Div(
                             ),
 
                             html.H6('¿Qué desea ver?'),
-                            dcc.RadioItems(
+                            dbc.RadioItems(
                                 options=[
                                     {'label': ' Accesibilidad', 'value': 'ACC'},
                                     {'label': ' Población', 'value': 'POB'},
                                 ],
                                 value='ACC',
-                                labelStyle={'margin-right': '12px', },
+                                className="btn-group",
+                                inputClassName="btn-check",
+                                labelClassName="btn btn-outline-primary btn-sm",
+                                labelCheckedClassName="active",
                                 style={'margin-bottom': '16px', },
                                 id=constants.CATEGORY_SELECTOR,
                             ),
@@ -322,7 +380,20 @@ app.layout = html.Div(
                                 value=constants.CATEGORICAL_VARIABLES[0],
                                 id=constants.VARIABLE_SELECTOR,
                                 clearable=False,
+                                style={'margin-bottom': '20px', },
+                            ),
+                            html.H6('¿Qué establecimientos desea ver?'),
+                            dcc.Checklist(
+                                options=[
+                                    {'label': ' Hospitales',
+                                        'value': constants.HOSPITAL_TRACE_NAME},
+                                    {'label': ' Espacios verdes',
+                                        'value': constants.ESPACIOS_VERDES_TRACE_NAME},
+                                    # {'label': ' Option 3', 'value': 3}
+                                ],
+                                labelStyle={'margin-right': '12px'},
                                 style={'margin-bottom': '50px', },
+                                id=constants.INFRA_CHECKLIST_ID
                             ),
                             dbc.Modal(
                                 [
@@ -371,13 +442,6 @@ app.layout = html.Div(
                             ),
 
 
-                            # html.H6('Medio de acceso'),
-                            # dcc.Dropdown(
-                            #     options=list(constants.ACCESIBILITY_MEANS.keys()),
-                            #     value=list(constants.ACCESIBILITY_MEANS.keys())[0],
-                            #     id=constants.ACCESIBILITY_SELECTOR,
-                            #     clearable=False
-                            # ),
                         ],
                         className='panel-control-content'
                     ),
@@ -449,62 +513,14 @@ app.layout = html.Div(
                                             'position': 'absolute',
                                             'top': 0,
                                             'left': 0,
-                                            'z-index': 1000,
+                                            'z-index': 10,
                                             'margin-top': '12px',
                                             'background-color': '#323232',
-                                            # "height": "20px"
+
                                         },
 
                                     ),
-                                    # dbc.ButtonGroup(
-                                    #     [dbc.Button("Left"), dbc.Button(
-                                    #         "Middle"), dbc.Button("Right")],
-                                    #     style={
-                                    #         # 'width': '200px',
-                                    #         'position': 'absolute',
-                                    #         'top': 0,
-                                    #         'left': 0,
-                                    #         'z-index': 1000,
-                                    #         'margin-top': '8px',
-                                    #         'background-color': '#323232',
-                                    #         # "height": "20px"
-                                    #     },
-                                    #     size="sm",
-                                    # )
 
-                                    # dbc.Button(
-                                    #     "Nivel socioeconómico",
-                                    #     style={
-                                    #         # 'width': '200px',
-                                    #         'position': 'absolute',
-                                    #         'top': 0,
-                                    #         'left': 0,
-                                    #         'z-index': 1000,
-                                    #         'margin-top': '8px',
-                                    #         'background-color': '#323232',
-                                    #         # "height": "20px"
-                                    #     },
-
-                                    # )
-                                    # dcc.Dropdown(
-                                    #     options=[
-                                    #         {'label': 'Nivel socioeconómico',
-                                    #          'value': 'NSE_5'},
-
-                                    #     ],
-                                    #     value='NSE_5',
-                                    #     clearable=False,
-                                    #     style={
-                                    #         'width': '200px',
-                                    #         'position': 'absolute',
-                                    #         'top': 0,
-                                    #         'left': 0,
-                                    #         'z-index': 1000,
-                                    #         'margin-top': '8px',
-                                    #         'background-color': '#323232',
-                                    #         "height": "20px"
-                                    #     },
-                                    # )
 
                                 ],
                                 className='bar-content',
@@ -537,12 +553,24 @@ app.layout = html.Div(
               component_property='value'),
         Input(component_id=constants.VARIABLE_SELECTOR,
               component_property='value'),
-        Input(constants.SCATTER_ID, 'selectedData')
+        Input(constants.SCATTER_ID, 'selectedData'),
+        Input(constants.INFRA_CHECKLIST_ID, 'value'),
 
     ],
+
 )
-def update_output_div(city, category, variable, belowGraphSelectedData):
+def update_output_div(city, category, variable, belowGraphSelectedData, infra_checklist):
     triggered_input = ctx.triggered_id
+
+    #time.sleep(200)
+
+    if triggered_input is None:
+        return dash.no_update, dash.no_update, dash.no_update
+
+    if triggered_input == constants.INFRA_CHECKLIST_ID:
+        map_fig = add_infraestructure_trace(fig_hex_map, infra_checklist)
+
+        return dash.no_update, dash.no_update, map_fig
 
     if (triggered_input == constants.SCATTER_ID):
         if (belowGraphSelectedData is not None):
@@ -573,7 +601,12 @@ def update_output_div(city, category, variable, belowGraphSelectedData):
             variable_options = [
                 {'label': 'Nivel socioeconómico', 'value': 'NSE_5'},]
             variable = constants.CATEGORICAL_VARIABLES[1]
+        if category == 'INFRA':
+
+            return dash.no_update, dash.no_update, dash.no_update
+
         return variable_options, variable, update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable)
+
     return dash.no_update, dash.no_update, update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable)
 
 
@@ -601,26 +634,6 @@ def render_tab_content(active_tab):
         return constants.ESPACIO_CAF_BODY_METODOLOGIA
     else:
         return "Unknown tab selected"
-
-# ---
-
-# Create a callback function to handle the selection event
-
-
-# @app.callback(
-#     Output(component_id=constants.MAP_ID, component_property='figure'),
-#     Input(constants.SCATTER_ID, 'selectedData'))
-# def handle_selection(selectedData):
-#     print(selectedData)
-#     # if selectedData is not None:
-#     #     x_values = [point['x'] for point in selectedData['points']]
-#     #     y_values = [point['y'] for point in selectedData['points']]
-#     #     return dash.no_update
-#     # else:
-#     #     return dash.no_update
-#     return dash.no_update
-
-# ---
 
 
 # Run the app

@@ -27,6 +27,7 @@ CITY_SELECTOR = 'my-city-selector'
 ACCESIBILITY_SELECTOR = 'my-accesibility-selector'
 CATEGORY_SELECTOR = 'my-category-selector'
 VARIABLE_SELECTOR = 'my-variable-selector'
+INFRA_CHECKLIST_ID = 'infra-checklist'
 
 CATEGORICAL_VARIABLES = ['IndiAcce_1', 'NSE_5']
 NON_CATEGORICAL_VARIABLES = ['Poblacion']
@@ -74,6 +75,18 @@ CATEGORICAL_COLORBAR = dict(
     len=0.3,
     tickfont=dict(color="#323232"),
 )
+
+HIDDEN_COLORBAR = dict(
+    orientation='v',
+    thickness=0.04,
+    y=0.32,
+    x=0.909,
+    len=0.04,
+    tickfont=dict(color="#323232", size=1)
+    
+)
+
+HIDDEN_COLORSCALE = ['#000000','#000000','#000000','#000000']
 
 ACERCA_DE_BODY_CONTENT = html.Div(
     children=[
@@ -222,3 +235,8 @@ ESPACIO_CAF_BODY_METODOLOGIA = html.Div(
     ],
     style={'margin-left': '40px', 'margin-right': '40px'}
 )
+
+
+MAP_TRACE_NAME = 'MAP'
+HOSPITAL_TRACE_NAME = 'HOSP'
+ESPACIOS_VERDES_TRACE_NAME = 'ESP_VERD'
