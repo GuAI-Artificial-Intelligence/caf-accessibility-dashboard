@@ -46,6 +46,7 @@ hospitales_gdf = gpd.read_parquet(
 espacios_verdes_gdf = gpd.read_parquet(
     current_path / 'data' / 'Bogota_EspaVerd.parquet'
 )
+espacios_verdes_gdf['name'].fillna(value='No disponible', inplace=True)
 
 
 def add_infraestructure_trace(fig, infra_traces):
@@ -63,7 +64,9 @@ def add_infraestructure_trace(fig, infra_traces):
                         size=5,
                         color="blue"
                     ),
-                    name=constants.HOSPITAL_TRACE_NAME
+                    name=constants.HOSPITAL_TRACE_NAME,
+                    customdata=hospitales_gdf[['nombre']],
+                    hovertemplate="<b>Nombre:</b> %{customdata[0]}",
                 )
             if value == constants.ESPACIOS_VERDES_TRACE_NAME:
                 trace_gdf = espacios_verdes_gdf.copy()
@@ -78,8 +81,8 @@ def add_infraestructure_trace(fig, infra_traces):
                     colorbar=constants.HIDDEN_COLORBAR,
                     colorscale=constants.HIDDEN_COLORSCALE,
                     marker_opacity=0.5,
-                    # customdata=df[['Poblacion', 'NSE_5', 'IndiAcce_1']],
-                    # hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> '%{customdata[1]}'<br><b>Accesibilidad:</b> '%{customdata[2]}'",
+                    customdata=espacios_verdes_gdf[['name']],
+                    hovertemplate="<b>Nombre:</b> %{customdata[0]}",
                     name=constants.ESPACIOS_VERDES_TRACE_NAME
                 )
                 fig.update_layout(coloraxis_showscale=False)
