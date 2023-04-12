@@ -83,10 +83,10 @@ HIDDEN_COLORBAR = dict(
     x=0.909,
     len=0.04,
     tickfont=dict(color="#323232", size=1)
-    
+
 )
 
-HIDDEN_COLORSCALE = ['#000000','#000000','#000000','#000000']
+HIDDEN_COLORSCALE = ['#000000', '#000000', '#000000', '#000000']
 
 ACERCA_DE_BODY_CONTENT = html.Div(
     children=[
@@ -167,10 +167,99 @@ ACERCA_DE_BODY_METODOLOGIA = html.Div(
                    'font-size': '24px'}
         ),
         html.P(
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
+            "Para el cálculo de accesibilidad urbana se requieren tres tipos de información: Orígenes, Destinos y tiempos/distancias.",
             style={'line-height': '1.2',
-                   'font-size': '15px', 'margin-bottom': '30px'}
+                   'font-size': '15px', 'margin-bottom': '15px'}
         ),
+        html.H5(
+            "Orígenes",
+            className="card-title",
+            style={'margin-bottom': '16px',
+                   'font-size': '18px'}
+        ),
+        html.P(
+            "Corresponde a las características de la población como ubicación de la vivienda, características de la vivienda (materiales, hacinamiento), características de la población (educación, nivel de ingresos), acceso a bienes, entre otras. Esta información usualmente se encuentra en los censos poblacionales. Para el desarrollo de este tablero se utilizaron:",
+            style={'line-height': '1.2',
+                   'font-size': '15px', 'margin-bottom': '10px'}
+        ),
+        html.Ul(
+            [
+                html.Li(
+                    [
+                        html.B("Bogotá: "),
+                        "Censo Nacional de Población y Vivienda - CNPV - 2018 ",
+                        html.A(
+                            "(link de descarga)",
+                            href="https://microdatos.dane.gov.co/index.php/catalog/643/get_microdata",
+                            target='_blank'
+                        ),
+                    ]
+                ),
+                html.Li(
+                    [
+                        html.B("Cuenca: "),
+                        "Censo de Población y Vivienda 2010 ",
+                        html.A(
+                            "(link de descarga)",
+                            href="https://www.ecuadorencifras.gob.ec/base-de-datos-censo-de-poblacion-y-vivienda-2010-a-nivel-de-manzana/",
+                            target='_blank'
+                        ),
+                    ]
+                ),
+            ],
+            style={'margin-top': '0px'}
+        ),
+
+        html.H5(
+            "Destinos",
+            className="card-title",
+            style={'margin-bottom': '16px',
+                   'font-size': '18px'}
+        ),
+        html.Div(
+            [
+                html.P(
+                    "En el modelo analítico creado por CAF y BID se denominan como atractores de viajes. Estos atractores están relacionados con los equipamientos a los cuales la población puede acceder desde su vivienda. Para el desarrollo de este tablero se utilizaron equipamientos de salud, educación y zonas verdes, los cuales están disponibles a través de la Interfaz para la Programación de Aplicaciones (API por sus siglas en inglés) de Open Street Maps (OSM en adelante).",
+                    style={'line-height': '1.2',
+                           'font-size': '15px', 'margin-bottom': '10px'}
+                ),
+                html.A(
+                    "Open Street Maps",
+                    href="https://wiki.openstreetmap.org/wiki/API_v0.6",
+                    target='_blank'
+                ),
+            ],
+
+        ),
+        html.H5(
+            "Tiempos/Distancias",
+            className="card-title",
+            style={'margin-bottom': '16px',
+                   'font-size': '18px'}
+        ),
+        html.Div(
+            [
+                html.P(
+                    "Para obtener el cálculo de accesibilidad se necesita estimar los tiempos y distancias de viaje desde la ubicación de la vivienda hasta el equipamiento de interés. Esta información debería tener en cuenta aspectos físicos de la infraestructura, como la malla vial y la red de transporte público. La forma más eficiente de obtener esta información es a través de la simulación de estos viajes a partir de las API públicas de las aplicaciones de ruteo de Google Maps y OSM.",
+                    style={'line-height': '1.2',
+                           'font-size': '15px', 'margin-bottom': '10px'}
+                ),
+                html.A(
+                    "Google Maps",
+                    href="https://mapsplatform.google.com/intl/es_ALL/products/#directions",
+                    target='_blank'
+                ),
+            ],
+            style={'margin-bottom': '30px'}
+
+        ),
+
+        html.P(
+            "---",
+            style={'line-height': '1.2',
+                   'font-size': '15px', 'margin-bottom': '15px'}
+        ),
+
         html.H5(
             "Cálculo de accesibilidad",
             className="card-title",
@@ -178,9 +267,59 @@ ACERCA_DE_BODY_METODOLOGIA = html.Div(
                    'font-size': '24px'}
         ),
         html.P(
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
+            "El cálculo de accesibilidad se realiza a partir de los siguientes pasos:",
             style={'line-height': '1.2',
-                   'font-size': '15px', 'margin-bottom': '30px', }
+                   'font-size': '15px', 'margin-bottom': '8px', }
+        ),
+        html.Ol(
+            [
+                html.Li(
+                    [
+                        "Procesamiento de la información:",
+                        html.Ul(
+                            [
+                                html.Li(
+                                    "Orígenes: homogeneización de la cartografía censal a partir de la creación de hexágonos de igual tamaño y la posterior estimación de Población y Nivel Socioeconómico."),
+                                html.Li(
+                                    "Destinos: obtención de la ubicación geográfica (Longitud, Latitud) de los equipamientos de interés."),
+                            ]
+                        )
+                    ]
+                ),
+                html.Li(
+                    [
+                        "Simulación de viajes:",
+                        html.Ul(
+                            [
+                                html.Li(
+                                    "Para el cálculo de distancias se utiliza la API de OSM."),
+                                html.Li(
+                                    "Para la estimación de los tiempos de viaje en distintos modos de transporte se utilizar la API de Google Maps"),
+                            ]
+                        )
+
+                    ]
+                ),
+                html.Li(
+                    [
+                        "Cálculo del indicador de accesibilidad: a partir de los datos generados en la simulación se procede a:",
+                        html.Ul(
+                            [
+                                html.Li(
+                                    "Cálculo de indicadores de congestión y accesibilidad a equipamientos."),
+                                html.Li(
+                                    "Cálculo de clusters de accesibilidad a partir de un proceso de clusterización (k-means) utilizando indicadores como distancia de acceso caminando al transporte público, distancia a los establecimientos principales (educación primaria y atención primaria de salud), cantidad de estos establecimientos en 2 km y tiempos de viaje al área central. Como resultado cada hexágono es asignado a una clase: Alta, Media Alta, Media Baja y Baja."),
+                            ]
+                        )
+                    ]
+                ),
+            ],
+            style={'margin-top': '0px', 'margin-bottom': '30px'}
+        ),
+        html.P(
+            "---",
+            style={'line-height': '1.2',
+                   'font-size': '15px', 'margin-bottom': '15px'}
         ),
         html.H5(
             "Cómo interpretar los resultados",
@@ -188,21 +327,93 @@ ACERCA_DE_BODY_METODOLOGIA = html.Div(
             style={'margin-bottom': '16px',
                    'font-size': '24px'}
         ),
-        html.P(
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
-            style={'line-height': '1.2',
-                   'font-size': '15px', 'margin-bottom': '30px', }
+        html.Ul(
+            [
+                html.Li(
+                    [
+                        html.B("Alta accesibilidad: "),
+                        "quienes viven aquí se encuentran a aproximadamente 18 minutos en bus del área central de la ciudad, tienen el transporte público a 463 metros en mediana, y tienen una oferta variada de equipamientos de educación y salud (aproximadamente 29 y 2 respectivamente).",
+                    ]
+                ),
+                html.Li(
+                    [
+                        html.B("Media Alta accesibilidad: "),
+                        "quienes viven aquí se encuentran a aproximadamente 41 minutos en bus del área central de la ciudad, tienen el transporte público a 386 metros en mediana, y tienen mayor cantidad de equipamientos de educación y salud (aproximadamente 56 y 4 respectivamente).",
+                    ]
+                ),
+                html.Li(
+                    [
+                        html.B("Media Baja accesibilidad: "),
+                        "quienes viven aquí se encuentran a aproximadamente 40 minutos en bus del área central de la ciudad, tienen el transporte público a 430 metros en mediana, y tienen una oferta variada de equipamientos de educación y salud (aproximadamente 30 y 2 respectivamente).",
+                    ]
+                ),
+                html.Li(
+                    [
+                        html.B("Baja accesibilidad: "),
+                        "quienes viven aquí se encuentran a aproximadamente 47 minutos en bus del área central de la ciudad, tienen el transporte público a 1038 metros en mediana, y no tienen buena oferta de equipamientos de educación y salud (aproximadamente 1 y 0 respectivamente).",
+                    ]
+                )
+            ],
+            style={'margin-top': '0px'}
         ),
         html.H5(
-            "Limitaciones",
+            "Ventajas y Limitaciones",
             className="card-title",
             style={'margin-bottom': '16px',
                    'font-size': '24px'}
         ),
         html.P(
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
+            "Con la implementación de este tablero a partir del modelo analitico desarrollado por CAF y BID se tienen las siguientes ventajas:",
             style={'line-height': '1.2',
-                   'font-size': '15px', 'margin-bottom': '30px', }
+                   'font-size': '15px', 'margin-bottom': '15px', }
+        ),
+        html.Ul(
+            [
+                html.Li(
+                    [
+                        "Se utilizan datos que están disponibles a nivel país (censos de población y vivienda).",
+                    ]
+                ),
+                html.Li(
+                    [
+                        "Se tiene un nivel de granularidad suficiente para mejorar la toma de decisiones.",
+                    ]
+                ),
+                html.Li(
+                    [
+                        "Se puede tener la información a la mano .",
+                    ]
+                ),
+                html.Li(
+                    [
+                        "Se puede hacer la implementación en otras ciudades.",
+                    ]
+                )
+            ],
+            style={'margin-top': '0px'}
+        ),
+
+
+
+        html.P(
+            "Sin embargo, es importante resaltar sus limitaciones para ver el alcance de las decisiones:",
+            style={'line-height': '1.2',
+                   'font-size': '15px', 'margin-bottom': '15px', }
+        ),
+        html.Ul(
+            [
+                html.Li(
+                    [
+                        "La información puede que no sea actualizada. Por ejemplo, el último censo de ecuador fue en 2010.",
+                    ]
+                ),
+                html.Li(
+                    [
+                        "La simulación de los viajes está sujeta a la calidad de datos de los proveedores Google Maps y OSM.",
+                    ]
+                ),
+            ],
+            style={'margin-top': '0px'}
         ),
 
 

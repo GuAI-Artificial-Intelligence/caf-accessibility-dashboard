@@ -92,7 +92,7 @@ def add_infraestructure_trace(fig, infra_traces):
     return fig.update(data=new_traces, overwrite=True)
 
 
-def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry, variable='IndiAcce_1', city=constants.BOGOTA_STR):
+def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry, variable=constants.CATEGORICAL_VARIABLES[0], city=constants.BOGOTA_STR):
     z = df[variable].map(constants.INDIACCE_DICTMAP).values
     colorbar = constants.CATEGORICAL_COLORBAR
     colorbar['tickvals'] = constants.INDIACCE_TICKVALS
@@ -106,7 +106,7 @@ def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry, 
             colorbar=colorbar,
             colorscale=constants.INDIACCE_COLORSCALE,
             marker_opacity=0.5,
-            customdata=df[['Poblacion', 'NSE_5', 'IndiAcce_1']],
+            customdata=df[['Poblacion', 'NSE_5', constants.CATEGORICAL_VARIABLES[0]]],
             hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> '%{customdata[1]}'<br><b>Accesibilidad:</b> '%{customdata[2]}'",
             name=constants.MAP_TRACE_NAME
         )
@@ -201,7 +201,7 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
         colorbar=colorbar,
         colorscale=colorscale,
         marker_opacity=0.5,
-        customdata=df[['Poblacion', 'NSE_5', 'IndiAcce_1']],
+        customdata=df[['Poblacion', 'NSE_5', constants.CATEGORICAL_VARIABLES[0]]],
         hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> '%{customdata[1]}'<br><b>Accesibilidad:</b> '%{customdata[2]}'",
         name=constants.MAP_TRACE_NAME
     )
@@ -243,13 +243,13 @@ def get_bar_figure():
         '4 - Medio-Bajo',
         '5 - Bajo'
     ]
-    y1 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet.IndiAcce_1 == '1. Alta'][[
+    y1 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet[constants.CATEGORICAL_VARIABLES[0]] == '1. Alta'][[
         'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
-    y2 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet.IndiAcce_1 == '2. Media Alta'][[
+    y2 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet[constants.CATEGORICAL_VARIABLES[0]] == '2. Media Alta'][[
         'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
-    y3 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet.IndiAcce_1 == '3. Media Baja'][[
+    y3 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet[constants.CATEGORICAL_VARIABLES[0]] == '3. Media Baja'][[
         'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
-    y4 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet.IndiAcce_1 == '4. Baja'][[
+    y4 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet[constants.CATEGORICAL_VARIABLES[0]] == '4. Baja'][[
         'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
 
     # fig = go.Figure(
@@ -378,7 +378,7 @@ app.layout = dcc.Loading(
                                 options=[
                                     # {'label': 'Nivel socioeconómico', 'value': 'NSE_5'},
                                     {'label': 'Índice de accesibilidad',
-                                     'value': 'IndiAcce_1'},
+                                     'value': constants.CATEGORICAL_VARIABLES[0]},
                                 ],
                                 value=constants.CATEGORICAL_VARIABLES[0],
                                 id=constants.VARIABLE_SELECTOR,
@@ -598,7 +598,7 @@ def update_output_div(city, category, variable, belowGraphSelectedData, infra_ch
     if triggered_input == constants.CATEGORY_SELECTOR:
         if category == 'ACC':
             variable_options = [
-                {'label': 'Índice de accesibilidad', 'value': 'IndiAcce_1'},]
+                {'label': 'Índice de accesibilidad', 'value': constants.CATEGORICAL_VARIABLES[0]},]
             variable = constants.CATEGORICAL_VARIABLES[0]
         if category == 'POB':
             variable_options = [
