@@ -106,7 +106,8 @@ def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry, 
             colorbar=colorbar,
             colorscale=constants.INDIACCE_COLORSCALE,
             marker_opacity=0.5,
-            customdata=df[['Poblacion', 'NSE_5', constants.CATEGORICAL_VARIABLES[0]]],
+            customdata=df[['Poblacion', 'NSE_5',
+                           constants.CATEGORICAL_VARIABLES[0]]],
             hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> '%{customdata[1]}'<br><b>Accesibilidad:</b> '%{customdata[2]}'",
             name=constants.MAP_TRACE_NAME
         )
@@ -201,7 +202,8 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
         colorbar=colorbar,
         colorscale=colorscale,
         marker_opacity=0.5,
-        customdata=df[['Poblacion', 'NSE_5', constants.CATEGORICAL_VARIABLES[0]]],
+        customdata=df[['Poblacion', 'NSE_5',
+                       constants.CATEGORICAL_VARIABLES[0]]],
         hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> '%{customdata[1]}'<br><b>Accesibilidad:</b> '%{customdata[2]}'",
         name=constants.MAP_TRACE_NAME
     )
@@ -313,17 +315,20 @@ def get_bar_figure():
     return fig_below_map
 
 
+
 # Create a Dash app
 app = Dash(
+    __name__,
     external_stylesheets=['assets/base.css',
-                          dbc.themes.BOOTSTRAP,  dbc.icons.BOOTSTRAP]
+                          dbc.themes.BOOTSTRAP,  dbc.icons.BOOTSTRAP],
 )
+
 app.title = 'Accesibilidad'
+
 app.layout = dcc.Loading(
     type='graph',
     children=[dbc.Row(
         children=[
-
             dbc.Col(
                 width=4,
                 className='panel-control-container',
@@ -565,7 +570,7 @@ app.layout = dcc.Loading(
 def update_output_div(city, category, variable, belowGraphSelectedData, infra_checklist):
     triggered_input = ctx.triggered_id
 
-    #time.sleep(200)
+    # time.sleep(200)
 
     if triggered_input is None:
         return dash.no_update, dash.no_update, dash.no_update
@@ -642,7 +647,7 @@ def render_tab_content(active_tab):
 # Run the app
 if __name__ == '__main__':
     app.run_server(
-        debug=True,
+        debug=False,
         host='0.0.0.0',
         port=8050
     )
