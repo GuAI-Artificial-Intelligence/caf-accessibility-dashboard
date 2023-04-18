@@ -67,13 +67,12 @@ with open(current_path / 'data' / 'espacios_verdes_gdf_geo_v2.json') as f:
 def get_first_element(list):
     return list[0]
 
-def add_infraestructure_trace(fig, trace):
 
-    t1 = time.time()
+def add_infraestructure_trace(fig, trace):
 
     fig.data = fig.data[0:1]
 
-    if trace==constants.NONE_TRACE_NAME:
+    if trace == constants.NONE_TRACE_NAME:
         return fig
 
     if trace == constants.HOSPITAL_TRACE_NAME:
@@ -89,7 +88,6 @@ def add_infraestructure_trace(fig, trace):
             customdata=hospitales_gdf[['nombre']],
             hovertemplate="<b>Nombre:</b> %{customdata[0]}",
         )
-
 
     if trace == constants.ESPACIOS_VERDES_TRACE_NAME:
         trace_gdf = espacios_verdes_gdf.copy()
@@ -111,14 +109,12 @@ def add_infraestructure_trace(fig, trace):
         fig.update_layout(coloraxis_showscale=False)
 
     fig = fig.add_trace(trace)
-    t2 = time.time()
-    print(f'add_infraestructure_trace: {t2-t1}')
+
     return fig
 
 
-
-
-def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry, variable=constants.CATEGORICAL_VARIABLES[0], city=constants.BOGOTA_STR):
+def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry,
+             variable=constants.CATEGORICAL_VARIABLES[0], city=constants.BOGOTA_STR):
     z = df[variable].map(constants.INDIACCE_DICTMAP).values
     colorbar = constants.CATEGORICAL_COLORBAR
     colorbar['tickvals'] = constants.INDIACCE_TICKVALS
@@ -127,7 +123,6 @@ def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry, 
 
     fig_hex_map = go.Figure(
         go.Choroplethmapbox(
-            # geojson=json.loads(geodf.to_json()),
             geojson=bogota_cuenca_gdf_geo_json,
             z=z,
             locations=pd.Series(df.index.values).astype(str),
@@ -160,8 +155,6 @@ fig_below_map = go.Figure()
 def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0],
                    df=bogota_cuenca_df_parquet, filter={'all': True},
                    geodf=bogota_cuenca_gdf_geo):
-
-    t1 = time.time()
 
     if not filter['all']:
         dfs = list()
@@ -214,38 +207,14 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
         colorbar['title'] = f'<b>{variable}</b><br> .'
         colorbar['tickmode'] = 'auto'
 
-    trace = go.Choroplethmapbox(
-        geojson=geodf.__geo_interface__,
-        # geojson=json.loads(geodf.to_json()),
+    fig_hex_map.update_traces(
         z=z,
-        # zmin=0,
-        # zmax=zmax,
-        locations=pd.Series(df.index.values).astype(str),
         colorbar=colorbar,
         colorscale=colorscale,
-        marker_opacity=0.5,
-        customdata=df[['Poblacion', 'NSE_5',
-                       constants.CATEGORICAL_VARIABLES[0]]],
-        hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> '%{customdata[1]}'<br><b>Accesibilidad:</b> '%{customdata[2]}'",
-        name=constants.MAP_TRACE_NAME
+        selector=dict(name=constants.MAP_TRACE_NAME)
     )
-    data = list(fig_hex_map.data)
-    data[0] = trace
-    fig_hex_map.update(data=data, overwrite=True)
 
-    # fig_hex_map.update_traces(
-    #     geojson=json.loads(geodf.to_json()),
-    #     overwrite=True,
-    #     z=z,
-    #     zmin=0,
-    #     zmax=zmax,
-    #     colorscale=colorscale,
-    #     colorbar=colorbar,
-    #     selector=dict(type='choroplethmapbox'),
-    #     customdata=df[['Poblacion', 'NSE_5', 'IndiAcce_1']],
-    #     hovertemplate="<b>Habitantes:</b> %{customdata[0]}<br><b>Nivel socioeconómico:</b> %{customdata[1]}<br><b>Accesibilidad:</b> %{customdata[2]}",
-    # )
-
+    
     fig_hex_map.update_layout(
         mapbox_center={
             "lat": lat,
@@ -254,7 +223,9 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
         mapbox_zoom=zoom,
     )
 
+
     return fig_hex_map
+
 
 
 def get_bar_figure():
@@ -593,7 +564,6 @@ app.layout = dcc.Loading(
 )
 def update_output_div(city, category, variable, belowGraphSelectedData, infra_selection):
     triggered_input = ctx.triggered_id
-
 
     if triggered_input is None:
         return dash.no_update, dash.no_update, dash.no_update
