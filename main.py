@@ -1,9 +1,11 @@
 # Python
 import json
 from pathlib import Path
+import os
 import time
-import sys
 
+# Perfomance
+from werkzeug.middleware.profiler import ProfilerMiddleware
 
 # Data Analysis
 import pandas as pd
@@ -49,47 +51,71 @@ espacios_verdes_gdf = gpd.read_parquet(
 espacios_verdes_gdf['name'].fillna(value='No disponible', inplace=True)
 
 
-def add_infraestructure_trace(fig, infra_traces):
-    new_traces = [trace for trace in fig.data if trace['name']
-                  == constants.MAP_TRACE_NAME]
-    if len(infra_traces) != 0:
-        for i, value in enumerate(infra_traces):
+with open(current_path / 'data' / 'bogota_cuenca_geo_v2.json') as f:
+    bogota_cuenca_gdf_geo_json = json.load(f)
 
-            if value == constants.HOSPITAL_TRACE_NAME:
-                trace = go.Scattermapbox(
-                    lat=hospitales_gdf.geometry.y,
-                    lon=hospitales_gdf.geometry.x,
-                    mode="markers",
-                    marker=dict(
-                        size=5,
-                        color="blue"
-                    ),
-                    name=constants.HOSPITAL_TRACE_NAME,
-                    customdata=hospitales_gdf[['nombre']],
-                    hovertemplate="<b>Nombre:</b> %{customdata[0]}",
-                )
-            if value == constants.ESPACIOS_VERDES_TRACE_NAME:
-                trace_gdf = espacios_verdes_gdf.copy()
-                trace_gdf['z'] = 1
-                trace = go.Choroplethmapbox(
-                    geojson=json.loads(espacios_verdes_gdf.geometry.to_json()),
-                    z=trace_gdf['z'].values,
-                    zmax=1,
-                    zmin=1,
-                    marker_line_width=0,
-                    locations=espacios_verdes_gdf.index.values.astype(str),
-                    colorbar=constants.HIDDEN_COLORBAR,
-                    colorscale=constants.HIDDEN_COLORSCALE,
-                    marker_opacity=0.5,
-                    customdata=espacios_verdes_gdf[['name']],
-                    hovertemplate="<b>Nombre:</b> %{customdata[0]}",
-                    name=constants.ESPACIOS_VERDES_TRACE_NAME
-                )
-                fig.update_layout(coloraxis_showscale=False)
+with open(current_path / 'data' / 'espacios_verdes_gdf_geo_v2.json') as f:
+    espacios_verdes_geo_json = json.load(f)
 
-            new_traces.append(trace)
 
-    return fig.update(data=new_traces, overwrite=True)
+# geometry_dict = espacios_verdes_gdf.__geo_interface__
+# geometry_dict = geometry_dict.replace('"', "'")
+# with open(current_path / 'data' / 'espacios_verdes_gdf_geo_v2.json', 'w') as f:
+#     json.dump(geometry_dict, f)
+
+# function to get a list with the first element of other list using slicing
+def get_first_element(list):
+    return list[0]
+
+def add_infraestructure_trace(fig, trace):
+
+    t1 = time.time()
+
+    fig.data = fig.data[0:1]
+
+    if trace==constants.NONE_TRACE_NAME:
+        return fig
+
+    if trace == constants.HOSPITAL_TRACE_NAME:
+        trace = go.Scattermapbox(
+            lat=hospitales_gdf.geometry.y,
+            lon=hospitales_gdf.geometry.x,
+            mode="markers",
+            marker=dict(
+                size=5,
+                color="blue"
+            ),
+            name=constants.HOSPITAL_TRACE_NAME,
+            customdata=hospitales_gdf[['nombre']],
+            hovertemplate="<b>Nombre:</b> %{customdata[0]}",
+        )
+
+
+    if trace == constants.ESPACIOS_VERDES_TRACE_NAME:
+        trace_gdf = espacios_verdes_gdf.copy()
+        trace_gdf['z'] = 1
+        trace = go.Choroplethmapbox(
+            geojson=espacios_verdes_geo_json,
+            z=trace_gdf['z'].values,
+            zmax=1,
+            zmin=1,
+            marker_line_width=0,
+            locations=espacios_verdes_gdf.index.values.astype(str),
+            colorbar=constants.HIDDEN_COLORBAR,
+            colorscale=constants.HIDDEN_COLORSCALE,
+            marker_opacity=0.5,
+            customdata=espacios_verdes_gdf[['name']],
+            hovertemplate="<b>Nombre:</b> %{customdata[0]}",
+            name=constants.ESPACIOS_VERDES_TRACE_NAME
+        )
+        fig.update_layout(coloraxis_showscale=False)
+
+    fig = fig.add_trace(trace)
+    t2 = time.time()
+    print(f'add_infraestructure_trace: {t2-t1}')
+    return fig
+
+
 
 
 def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry, variable=constants.CATEGORICAL_VARIABLES[0], city=constants.BOGOTA_STR):
@@ -98,9 +124,11 @@ def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry, 
     colorbar['tickvals'] = constants.INDIACCE_TICKVALS
     colorbar['ticktext'] = constants.INDIACCE_TICKTEXT
     colorbar['title'] = '<b>Accesibilidad</b><br> .'
+
     fig_hex_map = go.Figure(
         go.Choroplethmapbox(
-            geojson=json.loads(geodf.to_json()),
+            # geojson=json.loads(geodf.to_json()),
+            geojson=bogota_cuenca_gdf_geo_json,
             z=z,
             locations=pd.Series(df.index.values).astype(str),
             colorbar=colorbar,
@@ -128,19 +156,12 @@ def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry, 
 fig_hex_map = init_map()
 fig_below_map = go.Figure()
 
-# add_infraestructure_trace(hospitales_gdf, fig_hex_map)
-
-# end_time2 = time.time()
-
-# elapsed_time = end_time - start_time
-# elapsed_time2 = end_time2 - start_time2
-# print(f"Elapsed time (2): {elapsed_time} seconds")
-# print(f"Elapsed time (3): {elapsed_time2} seconds")
-
 
 def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0],
                    df=bogota_cuenca_df_parquet, filter={'all': True},
                    geodf=bogota_cuenca_gdf_geo):
+
+    t1 = time.time()
 
     if not filter['all']:
         dfs = list()
@@ -194,7 +215,8 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
         colorbar['tickmode'] = 'auto'
 
     trace = go.Choroplethmapbox(
-        geojson=json.loads(geodf.to_json()),
+        geojson=geodf.__geo_interface__,
+        # geojson=json.loads(geodf.to_json()),
         z=z,
         # zmin=0,
         # zmax=zmax,
@@ -315,7 +337,6 @@ def get_bar_figure():
     return fig_below_map
 
 
-
 # Create a Dash app
 app = Dash(
     __name__,
@@ -391,8 +412,10 @@ app.layout = dcc.Loading(
                                 style={'margin-bottom': '20px', },
                             ),
                             html.H6('¿Qué establecimientos desea ver?'),
-                            dcc.Checklist(
+                            dcc.RadioItems(
                                 options=[
+                                    {'label': ' Ninguno',
+                                     'value': constants.NONE_TRACE_NAME},
                                     {'label': ' Hospitales',
                                         'value': constants.HOSPITAL_TRACE_NAME},
                                     {'label': ' Espacios verdes',
@@ -401,7 +424,8 @@ app.layout = dcc.Loading(
                                 ],
                                 labelStyle={'margin-right': '12px'},
                                 style={'margin-bottom': '50px', },
-                                id=constants.INFRA_CHECKLIST_ID
+                                id=constants.INFRA_CHECKLIST_ID,
+                                value=constants.NONE_TRACE_NAME,
                             ),
                             dbc.Modal(
                                 [
@@ -567,16 +591,15 @@ app.layout = dcc.Loading(
     ],
 
 )
-def update_output_div(city, category, variable, belowGraphSelectedData, infra_checklist):
+def update_output_div(city, category, variable, belowGraphSelectedData, infra_selection):
     triggered_input = ctx.triggered_id
 
-    # time.sleep(200)
 
     if triggered_input is None:
         return dash.no_update, dash.no_update, dash.no_update
 
     if triggered_input == constants.INFRA_CHECKLIST_ID:
-        map_fig = add_infraestructure_trace(fig_hex_map, infra_checklist)
+        map_fig = add_infraestructure_trace(fig_hex_map, infra_selection)
 
         return dash.no_update, dash.no_update, map_fig
 
@@ -645,9 +668,32 @@ def render_tab_content(active_tab):
 
 
 # Run the app
-if __name__ == '__main__':
-    app.run_server(
-        debug=False,
-        host='0.0.0.0',
-        port=8050
-    )
+# if __name__ == '__main__':
+#     app.run_server(
+#         debug=True,
+#         host='0.0.0.0',
+#         port=8050
+#     )
+
+# if __name__ == "__main__":
+#     if os.getenv("PROFILER", None):
+#         app.server.config["PROFILE"] = True
+#         app.server.wsgi_app = ProfilerMiddleware(
+#             app.server.wsgi_app, sort_by=("cumtime", "tottime"), restrictions=[50]
+#         )
+#     app.run_server(debug=True)
+
+
+PROF_DIR = current_path / 'profile'
+
+if __name__ == "__main__":
+    if os.getenv("PROFILER", None):
+        app.server.config["PROFILE"] = True
+        app.server.wsgi_app = ProfilerMiddleware(
+            app.server.wsgi_app,
+            sort_by=["cumtime"],
+            restrictions=[50],
+            stream=None,
+            profile_dir=PROF_DIR
+        )
+    app.run_server(debug=True)
