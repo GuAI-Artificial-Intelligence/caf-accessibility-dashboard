@@ -21,38 +21,23 @@ a {
     --bs-gutter-x: 0 !important;
 }
 
-.panel-control-container {
+/* .panel-control-container {
     height: calc(100vh);
     padding: 0px;
-    /* background-color: rgb(30, 30, 30); */
-    position: relative;
-    /* margin-top: 36px;
-    margin-left: 50px; */
-}
+} */
 
 .panel-control-content {
-
-    /* width: calc(75%);` */
-    /* margin-left: 55px !important;
-    margin-top: 60px !important; */
     border: none;
     background-color: rgb(30, 30, 30);
     color: rgb(214, 214, 214);
+    display: flex;
+    flex-direction: column;
 }
 
 .map-container {
     padding: 0px;
     background-color: rgb(52, 51, 50)
-        /* margin-top: 36px;
-    margin-left: 16px; */
 }
-
-/* .map-content {
-    height: calc(60vh);
-    width: calc(100%);
-    border: none;
-} */
-
 
 .map-content {
     height: calc(100%);
@@ -65,16 +50,7 @@ a {
     width: calc(100% - 30px);
     border: none;
     margin-left: 30px;
-    /* margin-top: 20px; */
 }
-
-/* 
-#my-scatter {
-    height: calc(30vh) !important;
-    width: 100% !important;
-    padding: 0 !important;
-    background-color: rgb(52,51,50)
-} */
 
 .card-title {
     margin: 12px 0px;
@@ -89,13 +65,6 @@ a {
 #my-city-selector {
     margin-bottom: 12px;
 }
-
-/* #my-city-selector {
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 16px;
-    color: rgb(214, 214, 214) !important;
-} */
 
 .Select-control {
     background-color: rgb(30, 30, 30) !important;
@@ -117,7 +86,6 @@ a {
     margin-left: 6px;
     margin-top: 6px;
 }
-
 
 .modal-body-scroll {
     height: calc(70vh);
@@ -165,12 +133,12 @@ a {
     border: none;
     border-radius: 0;
     color: #DDD;
-    background-color: rgb(30, 30, 30);
+    background-color: #323232;
     margin-right: 24px;
 }
 
 .below-graph-tabs .nav-link.active {
-    background-color: rgb(30, 30, 30);
+    background-color: #323232;
     color: #FFF;
     border-bottom: solid 2px #FFF;
     font-weight: bold;

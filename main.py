@@ -422,8 +422,12 @@ left_panel_content = [
 
     html.Img(
         src='assets/images/caf_tumi_numo_logos.png',
-        style={'width': '100%', 'margin-left': '0px',
-               'bottom': '0px'}
+        style={
+            'width': '100%',
+            'margin-left': '0px',
+            'bottom': '0px',
+            "margin-top": "auto",
+        }
     ),
 ]
 
@@ -482,7 +486,7 @@ selector_panel_layout = [
         ],
         id="hide-show-left-panel",
         style={
-            "background-color": "#323232",
+            "background-color": "rgb(30,30,30)",
             "color": "white",
             "border": "none",
             "width": "32px",
@@ -503,7 +507,7 @@ selector_panel_layout = [
         ],
         id="open-modal-link",
         style={
-            "background-color": "#323232",
+            "background-color": "rgb(30,30,30)",
             "color": "white",
             "border": "none",
             "width": "32px",
@@ -592,7 +596,7 @@ app.layout = dcc.Loading(
                             children=below_graph_control_panel,
                             style={
                                 "width": "100%", "height": "5%",
-                                "background-color": "rgb(30, 30, 30)",
+                                "background-color": "#323232",
                                 "display": "flex",
                                 "align-items": "center",
 
