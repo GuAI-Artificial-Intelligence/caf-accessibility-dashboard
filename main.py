@@ -401,10 +401,10 @@ left_panel_content = [
     html.Img(
         src='assets/images/caf_tumi_numo_logos.png',
         style={
-            'width': '100%',
-            'margin-left': '0px',
+            'width': "calc(100%)",
+            'margin-left': '-24px',
             'bottom': '0px',
-            "margin-top": "auto",
+            "position": 'absolute',
         }
     ),
 ]
@@ -506,7 +506,9 @@ below_graph_control_panel = [
             active_tab="tab-1",
             className="below-graph-tabs",
             style={"font-size": "15px",
-                   "margin-left": "32px", "margin-bottom": "6px"}
+                   "margin-left": "32px", "margin-bottom": "6px",
+                   
+                   }
         )
     ),
 
@@ -547,14 +549,14 @@ app.layout = html.Div(
                         "width": "3%", "height": "100vh",
                         "background-color": "rgb(30, 30, 30)",
                         "display": "flex", "flex-direction": "column",
-                        "align-items": "center",
+                        "align-items": "center", "border-right": "0.1px solid rgba(255,255,255,0.2)",
                     },
                     id='selector-panel'
                 ),
                 html.Div(
                     children=left_panel_content,
                     style={"width": "30%", "height": "100vh",
-                           "padding": "24px 24px 16px 8px"},
+                           "padding": "24px 40px 0px 24px", "position": "relative"},
                     id='left-panel',
                     className='panel-control-content'
                 ),
@@ -578,7 +580,6 @@ app.layout = html.Div(
                                         "background-color": "#323232",
                                         "display": "flex",
                                         "align-items": "center",
-
                                     }
                                 ),
                                 html.Div(
@@ -638,7 +639,7 @@ def hide_show_left_panel(n_clicks):
         return dash.no_update, dash.no_update
 
     if n_clicks % 2 == 0:
-        return {"width": "30%", "height": "100vh", "padding": "24px 24px 16px 8px", "display": "flex"}, {"width": "68%", "height": "100vh",
+        return {"width": "30%", "height": "100vh", "padding": "24px 40px 0px 24px", "display": "flex", "position":"relative"}, {"width": "68%", "height": "100vh",
                                                                                                          "background-color": "#323232"}
     else:
         return {"width": "0%", "height": "100vh", "padding": "0px", "display": "none"}, {"width": "98%", "height": "100vh",
