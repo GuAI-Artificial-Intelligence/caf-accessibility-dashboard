@@ -231,28 +231,6 @@ def get_bar_figure():
     y4 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet[constants.CATEGORICAL_VARIABLES[0]] == '4. Baja'][[
         'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
 
-    # fig = go.Figure(
-    #     data=[
-    #         go.Bar(
-    #             name='Baja', x=nse, y=y4, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[0],
-    #             hoverinfo='none'
-    #         ),
-
-    #         go.Bar(
-    #             name='Media-Baja', x=nse, y=y3, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[1],
-    #             hoverinfo='none'
-    #         ),
-    #         go.Bar(
-    #             name='Media-Alta', x=nse, y=y2, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[2],
-    #             hoverinfo='none'
-    #         ),
-    #         go.Bar(
-    #             name='Alta', x=nse, y=y1, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[3],
-    #             hoverinfo='none'
-    #         ),
-    #     ],
-    # )
-
     fig_below_map.update(
         data=[
             go.Bar(
@@ -558,8 +536,8 @@ below_graph_control_panel = [
 ]
 
 
-app.layout = dcc.Loading(
-    type='graph',
+app.layout = html.Div(
+
     children=[
         html.Div(
             children=[
@@ -570,7 +548,6 @@ app.layout = dcc.Loading(
                         "background-color": "rgb(30, 30, 30)",
                         "display": "flex", "flex-direction": "column",
                         "align-items": "center",
-                        # "border-right": "0.5px solid black"
                     },
                     id='selector-panel'
                 ),
@@ -581,28 +558,37 @@ app.layout = dcc.Loading(
                     id='left-panel',
                     className='panel-control-content'
                 ),
+
+
                 html.Div(
                     children=[
-                        html.Div(
-                            children=map_layout,
-                            id='map-panel',
-                            style={"width": "100%", "height": "60vh", },
-                        ),
-                        html.Div(
-                            children=below_graph_control_panel,
-                            style={
-                                "width": "100%", "height": "5vh",
-                                "background-color": "#323232",
-                                "display": "flex",
-                                "align-items": "center",
+                        dcc.Loading(
+                            children=[
+                                html.Div(
+                                    children=map_layout,
+                                    id='map-panel',
+                                    style={"width": "100%",
+                                           "height": "60vh", },
+                                ),
 
-                            }
-                        ),
-                        html.Div(
-                            children=bottom_graph_layout,
-                            id='bottom-graph-panel',
-                            style={"width": "100%", "display":"flex", "height": "35vh"},
-                        ),
+                                html.Div(
+                                    children=below_graph_control_panel,
+                                    style={
+                                        "width": "100%", "height": "5vh",
+                                        "background-color": "#323232",
+                                        "display": "flex",
+                                        "align-items": "center",
+
+                                    }
+                                ),
+                                html.Div(
+                                    children=bottom_graph_layout,
+                                    id='bottom-graph-panel',
+                                    style={"width": "100%",
+                                           "display": "flex", "height": "35vh"},
+                                ),]
+                        )
+
 
 
                     ],
@@ -635,7 +621,7 @@ def hide_show_left_panel(n_clicks):
     if n_clicks % 2 == 0:
         return {"width": "100%", "height": "60vh", }, {"width": "100%", "height": "35vh", "display": "flex"}
     else:
-        return {"width": "100%", "height": "95vh", }, {"width": "100%", "height": "0vh","display": "none"}
+        return {"width": "100%", "height": "95vh", }, {"width": "100%", "height": "0vh", "display": "none"}
 
 
 @app.callback(
@@ -653,7 +639,7 @@ def hide_show_left_panel(n_clicks):
 
     if n_clicks % 2 == 0:
         return {"width": "30%", "height": "100vh", "padding": "24px 24px 16px 8px", "display": "flex"}, {"width": "68%", "height": "100vh",
-                                                                                                          "background-color": "#323232"}
+                                                                                                         "background-color": "#323232"}
     else:
         return {"width": "0%", "height": "100vh", "padding": "0px", "display": "none"}, {"width": "98%", "height": "100vh",
                                                                                          "background-color": "#323232"}
