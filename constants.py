@@ -31,6 +31,7 @@ INFRA_CHECKLIST_ID = 'infra-checklist'
 
 CATEGORICAL_VARIABLES = ['IndiAcce_1', 'NSE_5']
 NON_CATEGORICAL_VARIABLES = ['Poblacion']
+GEO_VARIABLES = ['geometry']
 
 NSE_3_DICTMAP = {
     '1 - Alto': 3,

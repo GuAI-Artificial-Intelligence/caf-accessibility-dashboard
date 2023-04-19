@@ -9,12 +9,12 @@ from werkzeug.middleware.profiler import ProfilerMiddleware
 
 # Data Analysis
 import pandas as pd
-import geopandas as gpd
 import numpy as np
-from shapely.ops import unary_union
+
+# Geo
+import geopandas as gpd
 
 # Plotly
-import plotly.express as px
 import plotly.graph_objects as go
 
 # Dash
@@ -27,36 +27,25 @@ import dash_bootstrap_components as dbc
 
 # Local
 import constants
+import db
+
+
 
 # Credentials
 from conf.credentials import MAPBOX_TOKEN
 
 current_path = Path()
 
-
-bogota_cuenca_df_parquet = pd.read_parquet(
-    current_path / 'data' / 'bogota_cuenca_v2.parquet'
-)
-
-bogota_cuenca_gdf_geo = gpd.read_parquet(
-    current_path / 'data' / 'bogota_cuenca_geo_v2.parquet',
-)
-
-hospitales_gdf = gpd.read_parquet(
-    current_path / 'data' / 'Bogota_SaluHosp.parquet'
-)
-
-espacios_verdes_gdf = gpd.read_parquet(
-    current_path / 'data' / 'Bogota_EspaVerd.parquet'
-)
-espacios_verdes_gdf['name'].fillna(value='No disponible', inplace=True)
+print("")
 
 
-with open(current_path / 'data' / 'bogota_cuenca_geo_v2.json') as f:
-    bogota_cuenca_gdf_geo_json = json.load(f)
+accessibility_df, accessibility_geo = db.get_dataframe_from_sqlite_db(table_name='Accessibility', conn=db.conn)
 
-with open(current_path / 'data' / 'espacios_verdes_gdf_geo_v2.json') as f:
-    espacios_verdes_geo_json = json.load(f)
+hospitales_df, hospitales_geo = db.get_dataframe_from_sqlite_db(table_name='Hospitals', conn=db.conn, geo_type='point')
+
+espacios_verdes_df, espacios_verde_geo = db.get_dataframe_from_sqlite_db(table_name='Green_Areas', conn=db.conn)
+espacios_verdes_df['name'].fillna(value='No disponible', inplace=True)
+
 
 
 def add_infraestructure_trace(fig, trace):
@@ -68,32 +57,32 @@ def add_infraestructure_trace(fig, trace):
 
     if trace == constants.HOSPITAL_TRACE_NAME:
         trace = go.Scattermapbox(
-            lat=hospitales_gdf.geometry.y,
-            lon=hospitales_gdf.geometry.x,
+            lat=hospitales_geo.lat,
+            lon=hospitales_geo.lon,
             mode="markers",
             marker=dict(
                 size=5,
                 color="blue"
             ),
             name=constants.HOSPITAL_TRACE_NAME,
-            customdata=hospitales_gdf[['nombre']],
+            customdata=hospitales_df[['nombre']],
             hovertemplate="<b>Nombre:</b> %{customdata[0]}",
         )
 
     if trace == constants.ESPACIOS_VERDES_TRACE_NAME:
-        trace_gdf = espacios_verdes_gdf.copy()
+        trace_gdf = espacios_verdes_df.copy()
         trace_gdf['z'] = 1
         trace = go.Choroplethmapbox(
-            geojson=espacios_verdes_geo_json,
+            geojson=espacios_verde_geo,
             z=trace_gdf['z'].values,
             zmax=1,
             zmin=1,
             marker_line_width=0,
-            locations=espacios_verdes_gdf.index.values.astype(str),
+            locations=espacios_verdes_df.index.values.astype(str),
             colorbar=constants.HIDDEN_COLORBAR,
             colorscale=constants.HIDDEN_COLORSCALE,
             marker_opacity=0.5,
-            customdata=espacios_verdes_gdf[['name']],
+            customdata=espacios_verdes_df[['name']],
             hovertemplate="<b>Nombre:</b> %{customdata[0]}",
             name=constants.ESPACIOS_VERDES_TRACE_NAME
         )
@@ -104,7 +93,7 @@ def add_infraestructure_trace(fig, trace):
     return fig
 
 
-def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry,
+def init_map(df=accessibility_df, geodf=accessibility_geo,
              variable=constants.CATEGORICAL_VARIABLES[0], city=constants.BOGOTA_STR):
     z = df[variable].map(constants.INDIACCE_DICTMAP).values
     colorbar = constants.CATEGORICAL_COLORBAR
@@ -114,7 +103,7 @@ def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry,
 
     fig_hex_map = go.Figure(
         go.Choroplethmapbox(
-            geojson=bogota_cuenca_gdf_geo_json,
+            geojson=geodf,
             z=z,
             locations=pd.Series(df.index.values).astype(str),
             colorbar=colorbar,
@@ -140,8 +129,7 @@ def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry,
 
 
 def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0],
-                   df=bogota_cuenca_df_parquet, filter={'all': True},
-                   geodf=bogota_cuenca_gdf_geo):
+                   df=accessibility_df, filter={'all': True}):
 
     if not filter['all']:
         dfs = list()
@@ -152,8 +140,6 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
             temp_df = df[mask]
             dfs.append(temp_df)
         df = pd.concat(dfs).copy()
-        geodf = geodf[geodf.hex.isin(df.hex)].copy()
-        geodf = geodf.geometry
 
     lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
     lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
@@ -176,20 +162,16 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
             z = df[variable].map(constants.INDIACCE_DICTMAP).values
             colorbar['tickvals'] = constants.INDIACCE_TICKVALS
             colorbar['ticktext'] = constants.INDIACCE_TICKTEXT
-            zmax = 4
             colorbar['title'] = '<b>Accesibilidad</b><br> .'
             colorscale = constants.INDIACCE_COLORSCALE
         if variable == constants.CATEGORICAL_VARIABLES[1]:
             z = df[variable].map(constants.NSE_5_DICTMAP).values
             colorbar['tickvals'] = constants.NS5_TICKVALS
             colorbar['ticktext'] = constants.NS5_TICKTEXT
-            zmax = 5
             colorbar['title'] = '<b>Nivel socio<br>económico</b><br> .'
 
     else:
         z = df[variable]
-        indices = np.where(df['city'] == city)
-        zmax = df[variable].values[indices].max()
         colorbar = constants.CATEGORICAL_COLORBAR
         colorbar['title'] = f'<b>{variable}</b><br> .'
         colorbar['tickmode'] = 'auto'
@@ -214,7 +196,7 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
 
 def get_bar_figure():
 
-    nse = bogota_cuenca_df_parquet.NSE_5.unique()
+    # nse = accessibility_df.NSE_5.unique()
     nse = [
         '1 - Alto',
         '2 - Medio-Alto',
@@ -222,13 +204,13 @@ def get_bar_figure():
         '4 - Medio-Bajo',
         '5 - Bajo'
     ]
-    y1 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet[constants.CATEGORICAL_VARIABLES[0]] == '1. Alta'][[
+    y1 = accessibility_df[accessibility_df[constants.CATEGORICAL_VARIABLES[0]] == '1. Alta'][[
         'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
-    y2 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet[constants.CATEGORICAL_VARIABLES[0]] == '2. Media Alta'][[
+    y2 = accessibility_df[accessibility_df[constants.CATEGORICAL_VARIABLES[0]] == '2. Media Alta'][[
         'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
-    y3 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet[constants.CATEGORICAL_VARIABLES[0]] == '3. Media Baja'][[
+    y3 = accessibility_df[accessibility_df[constants.CATEGORICAL_VARIABLES[0]] == '3. Media Baja'][[
         'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
-    y4 = bogota_cuenca_df_parquet[bogota_cuenca_df_parquet[constants.CATEGORICAL_VARIABLES[0]] == '4. Baja'][[
+    y4 = accessibility_df[accessibility_df[constants.CATEGORICAL_VARIABLES[0]] == '4. Baja'][[
         'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
 
     fig_below_map.update(
