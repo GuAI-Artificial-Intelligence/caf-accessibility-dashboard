@@ -46,14 +46,14 @@ a {
 }
 
 .bar-content {
-    height: calc(28vh) !important;
+    height: 100%;
     width: calc(100% - 30px);
     border: none;
     margin-left: 30px;
 }
 
 .card-title {
-    margin: 12px 0px;
+    margin: 0px 0px;
     font-size: 20px;
     font-weight: bold;
 }

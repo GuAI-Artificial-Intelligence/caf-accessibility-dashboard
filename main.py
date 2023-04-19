@@ -459,16 +459,12 @@ bottom_graph_layout = [
                 },
                 style={"height": "94%",
                        "width": "96%",
-                       'margin-top': '26px',
+                       'margin-top': '0px',
                        },
             ),
 
-
-
-
         ],
         className='bar-content',
-        style={'position': 'relative'}
     )
 ]
 
@@ -590,12 +586,12 @@ app.layout = dcc.Loading(
                         html.Div(
                             children=map_layout,
                             id='map-panel',
-                            style={"width": "100%", "height": "60%", },
+                            style={"width": "100%", "height": "60vh", },
                         ),
                         html.Div(
                             children=below_graph_control_panel,
                             style={
-                                "width": "100%", "height": "5%",
+                                "width": "100%", "height": "5vh",
                                 "background-color": "#323232",
                                 "display": "flex",
                                 "align-items": "center",
@@ -605,7 +601,7 @@ app.layout = dcc.Loading(
                         html.Div(
                             children=bottom_graph_layout,
                             id='bottom-graph-panel',
-                            style={"width": "100%", },
+                            style={"width": "100%", "display":"flex", "height": "35vh"},
                         ),
 
 
@@ -637,9 +633,9 @@ def hide_show_left_panel(n_clicks):
     if n_clicks is None:
         return dash.no_update, dash.no_update
     if n_clicks % 2 == 0:
-        return {"width": "100%", "height": "65%", }, {"width": "100%", "display": "block"}
+        return {"width": "100%", "height": "60vh", }, {"width": "100%", "height": "35vh", "display": "flex"}
     else:
-        return {"width": "100%", "height": "95%", }, {"width": "100%", "display": "none"}
+        return {"width": "100%", "height": "95vh", }, {"width": "100%", "height": "0vh","display": "none"}
 
 
 @app.callback(
@@ -656,7 +652,7 @@ def hide_show_left_panel(n_clicks):
         return dash.no_update, dash.no_update
 
     if n_clicks % 2 == 0:
-        return {"width": "30%", "height": "100vh", "padding": "24px 24px 16px 8px", "display": "block"}, {"width": "68%", "height": "100vh",
+        return {"width": "30%", "height": "100vh", "padding": "24px 24px 16px 8px", "display": "flex"}, {"width": "68%", "height": "100vh",
                                                                                                           "background-color": "#323232"}
     else:
         return {"width": "0%", "height": "100vh", "padding": "0px", "display": "none"}, {"width": "98%", "height": "100vh",
