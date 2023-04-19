@@ -1,7 +1,7 @@
 body {
     margin: 0;
     font-family: 'Open Sans', ;
-    color: #323232;
+    color: rgb(30, 30, 30);
     background-color: rgb(244, 244, 244);
     margin: 0px;
     padding: 0px;
@@ -24,22 +24,17 @@ a {
 .panel-control-container {
     height: calc(100vh);
     padding: 0px;
-    background-color: rgb(30, 30, 30);
+    /* background-color: rgb(30, 30, 30); */
     position: relative;
     /* margin-top: 36px;
     margin-left: 50px; */
 }
 
 .panel-control-content {
-    /* height: calc(100vh); */
-    width: calc(75%);
-    margin-left: 55px !important;
-    margin-top: 60px !important;
-    /*margin-top: 36px !important; */
-    padding: 0px !important;
-    /* box-shadow: 2px 2px 2px lightgrey; */
-    /* background-color: #f9f9f9; */
-    /* border-radius: 5px; */
+
+    /* width: calc(75%);` */
+    /* margin-left: 55px !important;
+    margin-top: 60px !important; */
     border: none;
     background-color: rgb(30, 30, 30);
     color: rgb(214, 214, 214);
@@ -60,7 +55,7 @@ a {
 
 
 .map-content {
-    height: calc(70vh);
+    height: calc(100%);
     width: calc(100%);
     border: none;
 }
@@ -161,13 +156,33 @@ a {
     font-weight: bold;
 }
 
+
+.below-graph-tabs .nav-tabs {
+    border-bottom: none;
+}
+
+.below-graph-tabs .nav-link {
+    border: none;
+    border-radius: 0;
+    color: #DDD;
+    background-color: rgb(30, 30, 30);
+    margin-right: 24px;
+}
+
+.below-graph-tabs .nav-link.active {
+    background-color: rgb(30, 30, 30);
+    color: #FFF;
+    border-bottom: solid 2px #FFF;
+    font-weight: bold;
+}
+
 .open-notes-link {
     margin-top: 30px !important;
 }
 
 .nav {
     --bs-nav-link-padding-x: 0;
-    --bs-nav-link-padding-y: 0.7rem;
+    --bs-nav-link-padding-y: 0.1rem;
     --bs-nav-link-font-weight: ;
     --bs-nav-link-color: var(--bs-link-color);
     --bs-nav-link-hover-color: var(--bs-link-hover-color);

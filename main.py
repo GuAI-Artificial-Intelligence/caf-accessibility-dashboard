@@ -20,6 +20,7 @@ import plotly.graph_objects as go
 # Dash
 import dash
 from dash import Dash, dcc, html, Input, Output, State, ctx
+from dash.exceptions import PreventUpdate
 
 # Bootstrap
 import dash_bootstrap_components as dbc
@@ -56,16 +57,6 @@ with open(current_path / 'data' / 'bogota_cuenca_geo_v2.json') as f:
 
 with open(current_path / 'data' / 'espacios_verdes_gdf_geo_v2.json') as f:
     espacios_verdes_geo_json = json.load(f)
-
-
-# geometry_dict = espacios_verdes_gdf.__geo_interface__
-# geometry_dict = geometry_dict.replace('"', "'")
-# with open(current_path / 'data' / 'espacios_verdes_gdf_geo_v2.json', 'w') as f:
-#     json.dump(geometry_dict, f)
-
-# function to get a list with the first element of other list using slicing
-def get_first_element(list):
-    return list[0]
 
 
 def add_infraestructure_trace(fig, trace):
@@ -148,10 +139,6 @@ def init_map(df=bogota_cuenca_df_parquet, geodf=bogota_cuenca_gdf_geo.geometry,
     return fig_hex_map
 
 
-fig_hex_map = init_map()
-fig_below_map = go.Figure()
-
-
 def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0],
                    df=bogota_cuenca_df_parquet, filter={'all': True},
                    geodf=bogota_cuenca_gdf_geo):
@@ -214,7 +201,6 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
         selector=dict(name=constants.MAP_TRACE_NAME)
     )
 
-    
     fig_hex_map.update_layout(
         mapbox_center={
             "lat": lat,
@@ -223,9 +209,7 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
         mapbox_zoom=zoom,
     )
 
-
     return fig_hex_map
-
 
 
 def get_bar_figure():
@@ -308,237 +292,371 @@ def get_bar_figure():
     return fig_below_map
 
 
+fig_hex_map = init_map()
+fig_below_map = go.Figure()
+
+
 # Create a Dash app
 app = Dash(
     __name__,
-    external_stylesheets=['assets/base.css',
-                          dbc.themes.BOOTSTRAP,  dbc.icons.BOOTSTRAP],
+    external_stylesheets=[
+        'assets/base.css',
+        dbc.themes.BOOTSTRAP,  dbc.icons.BOOTSTRAP
+    ],
 )
 
 app.title = 'Accesibilidad'
 
+
+left_panel_content = [
+    html.P('Accesibilidad en Bogotá y Cuenca',
+           className='card-subtitle',
+           style={'margin-bottom': '26px',
+                  'font-weight': 'bold', 'font-size': '14px'}
+           ),
+    html.H5("¿Cómo es la accesibilidad en la ciudad según el tipo de usuario?",
+            className="card-title",
+            style={'margin-bottom': '12px',
+                   'font-size': '24px'}
+            ),
+    html.P(
+        "Interactúe con las opciones de abajo y compruebe qué tan accesibles son las oportunidades para las personas.",
+        className="card-text",
+        style={'line-height': '1.2',
+               'font-size': '15px', 'margin-bottom': '16px'}
+    ),
+    html.H6('Seleccione un ciudad:'),
+    dcc.Dropdown(
+        options=list(
+            constants.CENTER_CITY_COORDINATES.keys()),
+        value=list(
+            constants.CENTER_CITY_COORDINATES.keys())[0],
+        id=constants.CITY_SELECTOR,
+        clearable=False,
+        style={'margin-bottom': '24px', }
+    ),
+
+    html.H6('¿Qué desea ver?'),
+    dbc.RadioItems(
+        options=[
+            {'label': ' Accesibilidad',
+             'value': 'ACC'},
+            {'label': ' Población',
+             'value': 'POB'},
+        ],
+        value='ACC',
+        className="btn-group",
+        inputClassName="btn-check",
+        labelClassName="btn btn-outline-primary btn-sm",
+        labelCheckedClassName="active",
+        style={'margin-bottom': '16px', },
+        id=constants.CATEGORY_SELECTOR,
+    ),
+
+    html.H6('  Seleccione una variable:'),
+    dcc.Dropdown(
+
+        options=[
+
+            {'label': 'Índice de accesibilidad',
+             'value': constants.CATEGORICAL_VARIABLES[0]},
+        ],
+        value=constants.CATEGORICAL_VARIABLES[0],
+        id=constants.VARIABLE_SELECTOR,
+        clearable=False,
+        style={'margin-bottom': '20px', },
+    ),
+    html.H6(
+        '¿Qué establecimientos desea ver?'),
+    dcc.RadioItems(
+        options=[
+            {'label': ' Ninguno',
+             'value': constants.NONE_TRACE_NAME},
+            {'label': ' Hospitales',
+             'value': constants.HOSPITAL_TRACE_NAME},
+            {'label': ' Espacios verdes',
+             'value': constants.ESPACIOS_VERDES_TRACE_NAME},
+            # {'label': ' Option 3', 'value': 3}
+        ],
+        labelStyle={'margin-right': '12px'},
+        style={'margin-bottom': '50px', },
+        id=constants.INFRA_CHECKLIST_ID,
+        value=constants.NONE_TRACE_NAME,
+    ),
+    dbc.Modal(
+        [
+            dbc.ModalHeader(
+                [
+                    dbc.Tabs(
+                        [
+                            dbc.Tab(
+                                label="Acerca de", tab_id="tab-1", className="nav-link"),
+                            dbc.Tab(
+                                label="Metodología", tab_id="tab-2", className="nav-link"),
+                            dbc.Tab(
+                                label="Proyecto TUMI Data Hub", tab_id="tab-3", className="nav-link"),
+                        ],
+                        id="modal-tabs",
+                        active_tab="tab-1",
+                        className="my-tabs"
+                    )
+                ],
+                style={'margin-left': '50px'}
+            ),
+            dbc.ModalBody(
+                "This modal takes most of the vertical space of the page.",
+                className="modal-body-scroll",
+                id="modal-body"
+            ),
+            dbc.ModalFooter(
+                dbc.Button("Cerrar", id="close",
+                           className="ml-auto", style={'background-color': 'rgb(72, 155, 248)'})
+            ),
+        ],
+        id="modal",
+        size="xl",
+        backdrop=True,
+        className='modal-content',
+    ),
+
+
+    html.Img(
+        src='assets/images/caf_tumi_numo_logos.png',
+        style={'width': '100%', 'margin-left': '0px',
+               'bottom': '0px'}
+    ),
+]
+
+map_layout = [
+    html.Div(
+        children=[
+            dcc.Graph(
+                figure=fig_hex_map,
+                style={"height": "100%",
+                       "width": "100%"},
+                config={
+                    'displayModeBar': False
+                },
+                id=constants.MAP_ID
+            )
+        ],
+        className='map-content'
+    )
+]
+
+bottom_graph_layout = [
+    html.Div(
+        children=[
+            dcc.Graph(
+                id=constants.SCATTER_ID,
+                figure=get_bar_figure(),
+                config={
+                    'displayModeBar': False
+                },
+                style={"height": "94%",
+                       "width": "96%",
+                       'margin-top': '26px',
+                       },
+            ),
+
+
+
+
+        ],
+        className='bar-content',
+        style={'position': 'relative'}
+    )
+]
+
+selector_panel_layout = [
+
+    dbc.Button(
+        children=[
+            html.I(
+                className="bi bi-arrow-left-right",
+                style={
+                    "padding": "0px",
+                    "marging-right": "0px",
+                }
+            ),
+        ],
+        id="hide-show-left-panel",
+        style={
+            "background-color": "#323232",
+            "color": "white",
+            "border": "none",
+            "width": "32px",
+            "height": "32px",
+            "margin-top": "16px",
+            "display": "flex", "justify-content": "center", "align-items": "center",
+        },
+    ),
+    dbc.Button(
+        children=[
+            html.I(
+                className="bi bi-patch-question-fill",
+                style={
+                    "padding": "0px",
+                    "marging-right": "0px",
+                }
+            ),
+        ],
+        id="open-modal-link",
+        style={
+            "background-color": "#323232",
+            "color": "white",
+            "border": "none",
+            "width": "32px",
+            "height": "32px",
+            "margin-top": "16px",
+            "display": "flex", "justify-content": "center", "align-items": "center",
+        },
+    )
+]
+
+below_graph_control_panel = [
+    html.Div(
+        dbc.Tabs(
+            [
+                dbc.Tab(
+                    label="Nivel socieconómico", tab_id="tab-1", className="nav-link"),
+                dbc.Tab(
+                    label="Option 2", tab_id="tab-2", className="nav-link"),
+
+            ],
+            id="below-tabs",
+            active_tab="tab-1",
+            className="below-graph-tabs",
+            style={"font-size": "15px",
+                   "margin-left": "32px", "margin-bottom": "6px"}
+        )
+    ),
+
+    dbc.Button(
+        children=[
+            html.I(
+                className="bi bi-arrow-down-up",
+                style={
+                    "padding": "0px",
+                    "marging-right": "0px",
+                }
+            ),
+        ],
+        id="hide-show-bottom-graph-panel",
+        style={
+            "background-color": "#323232",
+            "color": "white",
+            "border": "none",
+            "width": "32px",
+            "height": "32px",
+            "margin-right": "32px",
+            "display": "flex", "justify-content": "center", "align-items": "center",
+            "margin-left": "auto",
+
+        },
+    )
+]
+
+
 app.layout = dcc.Loading(
     type='graph',
-    children=[dbc.Row(
-        children=[
-            dbc.Col(
-                width=4,
-                className='panel-control-container',
-                children=[
-                    html.Div(
-                        children=[
-                            html.P('Accesibilidad en Bogotá y Cuenca',
-                                   className='card-subtitle',
-                                   style={'margin-bottom': '26px',
-                                          'font-weight': 'bold', 'font-size': '14px'}
-                                   ),
-                            html.H5("¿Cómo es la accesibilidad en la ciudad según el tipo de usuario?",
-                                    className="card-title",
-                                    style={'margin-bottom': '12px',
-                                           'font-size': '24px'}
-                                    ),
-                            html.P(
-                                "Interactúe con las opciones de abajo y compruebe qué tan accesibles son las oportunidades para las personas.",
-                                className="card-text",
-                                style={'line-height': '1.2',
-                                       'font-size': '15px', 'margin-bottom': '16px'}
-                            ),
-                            html.H6('Seleccione un ciudad:'),
-                            dcc.Dropdown(
-                                options=list(
-                                    constants.CENTER_CITY_COORDINATES.keys()),
-                                value=list(
-                                    constants.CENTER_CITY_COORDINATES.keys())[0],
-                                id=constants.CITY_SELECTOR,
-                                clearable=False,
-                                style={'margin-bottom': '24px', }
-                            ),
+    children=[
+        html.Div(
+            children=[
+                html.Div(
+                    children=selector_panel_layout,
+                    style={
+                        "width": "3%", "height": "100vh",
+                        "background-color": "rgb(30, 30, 30)",
+                        "display": "flex", "flex-direction": "column",
+                        "align-items": "center",
+                        # "border-right": "0.5px solid black"
+                    },
+                    id='selector-panel'
+                ),
+                html.Div(
+                    children=left_panel_content,
+                    style={"width": "30%", "height": "100vh",
+                           "padding": "24px 24px 16px 8px"},
+                    id='left-panel',
+                    className='panel-control-content'
+                ),
+                html.Div(
+                    children=[
+                        html.Div(
+                            children=map_layout,
+                            id='map-panel',
+                            style={"width": "100%", "height": "60%", },
+                        ),
+                        html.Div(
+                            children=below_graph_control_panel,
+                            style={
+                                "width": "100%", "height": "5%",
+                                "background-color": "rgb(30, 30, 30)",
+                                "display": "flex",
+                                "align-items": "center",
 
-                            html.H6('¿Qué desea ver?'),
-                            dbc.RadioItems(
-                                options=[
-                                    {'label': ' Accesibilidad', 'value': 'ACC'},
-                                    {'label': ' Población', 'value': 'POB'},
-                                ],
-                                value='ACC',
-                                className="btn-group",
-                                inputClassName="btn-check",
-                                labelClassName="btn btn-outline-primary btn-sm",
-                                labelCheckedClassName="active",
-                                style={'margin-bottom': '16px', },
-                                id=constants.CATEGORY_SELECTOR,
-                            ),
-
-                            html.H6('  Seleccione una variable:'),
-                            dcc.Dropdown(
-                                # options=constants.CATEGORICAL_VARIABLES+constants.NON_CATEGORICAL_VARIABLES,
-                                options=[
-                                    # {'label': 'Nivel socioeconómico', 'value': 'NSE_5'},
-                                    {'label': 'Índice de accesibilidad',
-                                     'value': constants.CATEGORICAL_VARIABLES[0]},
-                                ],
-                                value=constants.CATEGORICAL_VARIABLES[0],
-                                id=constants.VARIABLE_SELECTOR,
-                                clearable=False,
-                                style={'margin-bottom': '20px', },
-                            ),
-                            html.H6('¿Qué establecimientos desea ver?'),
-                            dcc.RadioItems(
-                                options=[
-                                    {'label': ' Ninguno',
-                                     'value': constants.NONE_TRACE_NAME},
-                                    {'label': ' Hospitales',
-                                        'value': constants.HOSPITAL_TRACE_NAME},
-                                    {'label': ' Espacios verdes',
-                                        'value': constants.ESPACIOS_VERDES_TRACE_NAME},
-                                    # {'label': ' Option 3', 'value': 3}
-                                ],
-                                labelStyle={'margin-right': '12px'},
-                                style={'margin-bottom': '50px', },
-                                id=constants.INFRA_CHECKLIST_ID,
-                                value=constants.NONE_TRACE_NAME,
-                            ),
-                            dbc.Modal(
-                                [
-                                    dbc.ModalHeader(
-                                        [
-                                            dbc.Tabs(
-                                                [
-                                                    dbc.Tab(
-                                                        label="Acerca de", tab_id="tab-1", className="nav-link"),
-                                                    dbc.Tab(
-                                                        label="Metodología", tab_id="tab-2", className="nav-link"),
-                                                    dbc.Tab(
-                                                        label="Proyecto TUMI Data Hub", tab_id="tab-3", className="nav-link"),
-                                                ],
-                                                id="modal-tabs",
-                                                active_tab="tab-1",
-                                                className="my-tabs"
-                                            )
-                                        ],
-                                        style={'margin-left': '50px'}
-                                    ),
-                                    dbc.ModalBody(
-                                        "This modal takes most of the vertical space of the page.",
-                                        className="modal-body-scroll",
-                                        id="modal-body"
-                                    ),
-                                    dbc.ModalFooter(
-                                        dbc.Button("Cerrar", id="close",
-                                                   className="ml-auto", style={'background-color': 'rgb(72, 155, 248)'})
-                                    ),
-                                ],
-                                id="modal",
-                                size="xl",
-                                backdrop=True,
-                                className='modal-content',
-
-                            ),
-                            # dbc.Button("Sobre este tablero", id="open", className='notes-button btn-dark'),
-
-                            html.A(children=[
-                                html.I(
-                                    className="bi bi-patch-question-fill me-2"),
-                                "Sobre este tablero"
-                            ],
-                                href="#", id="open-modal-link",
-                            ),
+                            }
+                        ),
+                        html.Div(
+                            children=bottom_graph_layout,
+                            id='bottom-graph-panel',
+                            style={"width": "100%", },
+                        ),
 
 
-                        ],
-                        className='panel-control-content'
-                    ),
-
-                    html.Img(
-                        src='assets/images/caf_tumi_numo_logos.png',
-                        # style={'width':'75%', 'margin-left':'55px', 'margin-top':'50px', 'position':'absolute', 'bottom':'0px'}
-                            style={'width': '100%', 'margin-left': '0px',
-                                   'position': 'absolute', 'bottom': '0px'}
-                    ),
-
-                ]
-            ),
+                    ],
+                    style={"width": "68%", "height": "100vh", },
+                    id='right-panel',
+                    className='map-container'
+                )
 
 
-
-            dbc.Col(
-                width=8,
-                children=[
-                    dbc.Row(
-                        children=[
-
-                            html.Div(
-                                children=[
-                                    dcc.Graph(
-                                        figure=fig_hex_map,
-                                        style={"height": "100%",
-                                               "width": "100%"},
-                                        config={
-                                            'displayModeBar': False
-                                        },
-                                        id=constants.MAP_ID
-                                    )
-                                ],
-                                className='map-content'
-                            ),
-                        ],
-                    ),
-                    dbc.Row(
-                        children=[
-                            html.Div(
-                                children=[
-                                    dcc.Graph(
-                                        id=constants.SCATTER_ID,
-                                        figure=get_bar_figure(),
-                                        config={
-                                            'displayModeBar': False
-                                        },
-                                        style={"height": "94%",
-                                               "width": "96%",
-                                               'margin-top': '26px',
-                                               },
-                                    ),
-                                    dbc.RadioItems(
-                                        id="radios",
-                                        className="btn-group",
-                                        inputClassName="btn-check",
-                                        labelClassName="btn btn-outline-primary btn-sm",
-                                        labelCheckedClassName="active",
-                                        options=[
-                                            {"label": "Nivel socieconómico",
-                                                "value": 1},
-                                            {"label": "Option 2", "value": 2},
-                                            # {"label": "Option 3", "value": 3},
-                                        ],
-                                        value=1,
-                                        style={
-                                            # 'width': '200px',
-                                            'position': 'absolute',
-                                            'top': 0,
-                                            'left': 0,
-                                            'z-index': 10,
-                                            'margin-top': '12px',
-                                            'background-color': '#323232',
-
-                                        },
-
-                                    ),
-
-
-                                ],
-                                className='bar-content',
-                                style={'position': 'relative'}
-                            )
-                        ],
-                    ),
-
-                ],
-                className='map-container'
-            ),
-        ]
-    ),
+            ],
+            style={"display": "flex"},
+            id='main-container'
+        )
     ]
 )
+
+
+@app.callback(
+    [
+        Output('map-panel', 'style'),
+        Output('bottom-graph-panel', 'style'),
+    ],
+    [
+        Input('hide-show-bottom-graph-panel', 'n_clicks')
+    ]
+)
+def hide_show_left_panel(n_clicks):
+    if n_clicks is None:
+        return dash.no_update, dash.no_update
+    if n_clicks % 2 == 0:
+        return {"width": "100%", "height": "65%", }, {"width": "100%", "display": "block"}
+    else:
+        return {"width": "100%", "height": "95%", }, {"width": "100%", "display": "none"}
+
+
+@app.callback(
+    [
+        Output('left-panel', 'style'),
+        Output('right-panel', 'style'),
+    ],
+    [
+        Input('hide-show-left-panel', 'n_clicks')
+    ]
+)
+def hide_show_left_panel(n_clicks):
+    if n_clicks is None:
+        return dash.no_update, dash.no_update
+
+    if n_clicks % 2 == 0:
+        return {"width": "30%", "height": "100vh", "padding": "24px 24px 16px 8px", "display": "block"}, {"width": "68%", "height": "100vh",
+                                                                                                          "background-color": "#323232"}
+    else:
+        return {"width": "0%", "height": "100vh", "padding": "0px", "display": "none"}, {"width": "98%", "height": "100vh",
+                                                                                         "background-color": "#323232"}
 
 
 @app.callback(
@@ -566,7 +684,8 @@ def update_output_div(city, category, variable, belowGraphSelectedData, infra_se
     triggered_input = ctx.triggered_id
 
     if triggered_input is None:
-        return dash.no_update, dash.no_update, dash.no_update
+        raise PreventUpdate
+        # return dash.no_update, dash.no_update, dash.no_update
 
     if triggered_input == constants.INFRA_CHECKLIST_ID:
         map_fig = add_infraestructure_trace(fig_hex_map, infra_selection)
@@ -636,7 +755,7 @@ def render_tab_content(active_tab):
     else:
         return "Unknown tab selected"
 
-
+# ----
 # Run the app
 # if __name__ == '__main__':
 #     app.run_server(
@@ -644,7 +763,6 @@ def render_tab_content(active_tab):
 #         host='0.0.0.0',
 #         port=8050
 #     )
-
 # if __name__ == "__main__":
 #     if os.getenv("PROFILER", None):
 #         app.server.config["PROFILE"] = True
@@ -667,3 +785,6 @@ if __name__ == "__main__":
             profile_dir=PROF_DIR
         )
     app.run_server(debug=True)
+
+
+#
