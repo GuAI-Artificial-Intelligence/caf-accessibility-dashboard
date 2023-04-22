@@ -30,7 +30,6 @@ import constants
 import db
 
 
-
 # Credentials
 from conf.credentials import MAPBOX_TOKEN
 
@@ -39,12 +38,27 @@ current_path = Path()
 print("")
 
 
-accessibility_df, accessibility_geo = db.get_dataframe_from_sqlite_db(table_name='Accessibility', conn=db.conn)
+accessibility_df, accessibility_geo = db.get_dataframe_from_sqlite_db(
+    table_name='Accessibility', conn=db.conn)
 
-hospitales_df, hospitales_geo = db.get_dataframe_from_sqlite_db(table_name='Hospitals', conn=db.conn, geo_type='point')
+hospitales_df, hospitales_geo = db.get_dataframe_from_sqlite_db(
+    table_name='Hospitals', conn=db.conn, geo_type='point')
 
-espacios_verdes_df, espacios_verde_geo = db.get_dataframe_from_sqlite_db(table_name='Green_Areas', conn=db.conn)
+espacios_verdes_df, espacios_verde_geo = db.get_dataframe_from_sqlite_db(
+    table_name='Green_Areas', conn=db.conn)
 espacios_verdes_df['name'].fillna(value='No disponible', inplace=True)
+
+primary_health_care_df, primary_health_care_geo = db.get_dataframe_from_sqlite_db(
+    table_name='Primary_Health_Care', conn=db.conn, geo_type='point')
+
+primary_education_df, primary_education_geo = db.get_dataframe_from_sqlite_db(
+    table_name='Primary_Education', conn=db.conn, geo_type='point')
+
+early_education_df, early_education_geo = db.get_dataframe_from_sqlite_db(
+    table_name='Early_Education', conn=db.conn, geo_type='point')
+
+secondary_education_df, secondary_education_geo = db.get_dataframe_from_sqlite_db(
+    table_name='Early_Education', conn=db.conn, geo_type='point')
 
 
 
@@ -62,11 +76,67 @@ def add_infraestructure_trace(fig, trace):
             mode="markers",
             marker=dict(
                 size=5,
-                color="blue"
+                color="#023e8a"
             ),
             name=constants.HOSPITAL_TRACE_NAME,
             customdata=hospitales_df[['nombre']],
             hovertemplate="<b>Nombre:</b> %{customdata[0]}",
+        )
+
+    if trace == constants.ATENCION_PRIMARIA_TRACE_NAME:
+        trace = go.Scattermapbox(
+            lat=primary_health_care_geo.lat,
+            lon=primary_health_care_geo.lon,
+            mode="markers",
+            marker=dict(
+                size=5,
+                color="#0077b6"
+            ),
+            name=constants.ATENCION_PRIMARIA_TRACE_NAME,
+            customdata=primary_health_care_df[['nombre']],
+            hovertemplate="<b>Nombre:</b> %{customdata[0]}",
+        )
+
+    if trace == constants.EARLY_EDUCATION_TRACENAME:
+        trace = go.Scattermapbox(
+            lat=early_education_geo.lat,
+            lon=early_education_geo.lon,
+            mode="markers",
+            marker=dict(
+                size=5,
+                color="#9d4edd"
+            ),
+            name=constants.EARLY_EDUCATION_TRACENAME,
+            customdata=early_education_df[['nombre', 'oferta']],
+            hovertemplate="<b>Nombre:</b> %{customdata[0]}<br><b>Oferta:</b> %{customdata[1]}",
+        )
+
+    if trace == constants.PRIMARY_EDUCATION_TRACENAME:
+        trace = go.Scattermapbox(
+            lat=primary_education_geo.lat,
+            lon=primary_education_geo.lon,
+            mode="markers",
+            marker=dict(
+                size=5,
+                color="#7b2cbf"
+            ),
+            name=constants.PRIMARY_EDUCATION_TRACENAME,
+            customdata=primary_education_df[['nombre', 'oferta']],
+            hovertemplate="<b>Nombre:</b> %{customdata[0]}<br><b>Oferta:</b> %{customdata[1]}",
+        )
+
+    if trace == constants.SECONDARY_EDUCATION_TRACENAME:
+        trace = go.Scattermapbox(
+            lat=secondary_education_geo.lat,
+            lon=secondary_education_geo.lon,
+            mode="markers",
+            marker=dict(
+                size=5,
+                color="#5a189a"
+            ),
+            name=constants.SECONDARY_EDUCATION_TRACENAME,
+            customdata=secondary_education_df[['nombre', 'oferta']],
+            hovertemplate="<b>Nombre:</b> %{customdata[0]}<br><b>Oferta:</b> %{customdata[1]}",
         )
 
     if trace == constants.ESPACIOS_VERDES_TRACE_NAME:
@@ -328,17 +398,27 @@ left_panel_content = [
     ),
     html.H6(
         '¿Qué establecimientos desea ver?'),
-    dcc.RadioItems(
+    dcc.Dropdown(
         options=[
-            {'label': ' Ninguno',
+            {'label': 'Ninguno',
              'value': constants.NONE_TRACE_NAME},
-            {'label': ' Hospitales',
+            {'label': 'Salud - Atención primaria',
+             'value': constants.ATENCION_PRIMARIA_TRACE_NAME},
+            {'label': 'Salud - Hospitales',
              'value': constants.HOSPITAL_TRACE_NAME},
-            {'label': ' Espacios verdes',
+            {'label': 'Educación - Inicial',
+             'value': constants.EARLY_EDUCATION_TRACENAME},
+            {'label': 'Educación - Primaria',
+             'value': constants.PRIMARY_EDUCATION_TRACENAME},
+            {'label': 'Educación - Secundaria',
+             'value': constants.SECONDARY_EDUCATION_TRACENAME},
+            {'label': 'Espacios verdes',
              'value': constants.ESPACIOS_VERDES_TRACE_NAME},
-            # {'label': ' Option 3', 'value': 3}
+
+
+
         ],
-        labelStyle={'margin-right': '12px'},
+        clearable=False,
         style={'margin-bottom': '50px', },
         id=constants.INFRA_CHECKLIST_ID,
         value=constants.NONE_TRACE_NAME,
@@ -489,7 +569,7 @@ below_graph_control_panel = [
             className="below-graph-tabs",
             style={"font-size": "15px",
                    "margin-left": "32px", "margin-bottom": "6px",
-                   
+
                    }
         )
     ),
@@ -621,8 +701,8 @@ def hide_show_left_panel(n_clicks):
         return dash.no_update, dash.no_update
 
     if n_clicks % 2 == 0:
-        return {"width": "30%", "height": "100vh", "padding": "24px 40px 0px 24px", "display": "flex", "position":"relative"}, {"width": "68%", "height": "100vh",
-                                                                                                         "background-color": "#323232"}
+        return {"width": "30%", "height": "100vh", "padding": "24px 40px 0px 24px", "display": "flex", "position": "relative"}, {"width": "68%", "height": "100vh",
+                                                                                                                                 "background-color": "#323232"}
     else:
         return {"width": "0%", "height": "100vh", "padding": "0px", "display": "none"}, {"width": "98%", "height": "100vh",
                                                                                          "background-color": "#323232"}
@@ -754,6 +834,3 @@ if __name__ == "__main__":
             profile_dir=PROF_DIR
         )
     app.run_server(debug=True)
-
-
-#

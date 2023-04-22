@@ -21,15 +21,15 @@ current_path = Path()
 conn = sqlite3.connect(current_path / 'data' / 'caf_accessibility.db')
 
 
-def save_dataframe_in_sqlite_db(df: pd.DataFrame, table_name: str, conn: sqlite3.Connection=conn):
-    if 'geometry' not in df.columns:
-        raise ValueError('Dataframe must have a geometry column')
-    df['geometry'] = df.apply(lambda x: shapely.wkb.dumps(x.geometry), axis=1)
-    df.to_sql(table_name, conn, if_exists='replace', index=False)
+# def save_dataframe_in_sqlite_db(df: pd.DataFrame, table_name: str, conn: sqlite3.Connection=conn):
+#     if 'geometry' not in df.columns:
+#         raise ValueError('Dataframe must have a geometry column')
+#     df['geometry'] = df.apply(lambda x: shapely.wkb.dumps(x.geometry), axis=1)
+#     df.to_sql(table_name, conn, if_exists='replace', index=False)
 
 
 def get_dataframe_from_sqlite_db(table_name: str, conn: sqlite3.Connection=conn, geo_type: str='polygon'):
-    columns = utils.concat_list()   
+    # columns = utils.concat_list()   
     columns = '*'
     df = pd.read_sql(f'SELECT {columns} FROM {table_name}', conn)
     if geo_type == 'polygon':
