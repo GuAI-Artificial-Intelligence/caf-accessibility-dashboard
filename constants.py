@@ -45,29 +45,28 @@ GEO_VARIABLES = ['geometry']
 
 POPULATION_TYPES = {
     'TOT_POB': 'Toda la poblacion',
-    'DIFIC_BICI': 'Dificultad para usar bicicleta',
-    'DIFIC_AUTO': 'Dificultad para usar automóvil',
-    'DIFIC_BUS': 'Dificultad para usar bus/microbús',
-    'DIFIC_TRANSMILENIO': 'Dificultad para usar TransMilenio',
-    # 'ANALF': 'Personas analfabetas',
-    # 'DISCAP': 'Personas discapacitadas',
-    # 'MUJER_JEF_HOG': 'Mujeres jefas de hogar',
-    # 'INDIGENAS': 'Indígenas',
-    # 'AFRO': 'Afrodescendientes',
+    'PEATON': 'Peatones',
+    'BICIUSUARIO': 'Biciusuarios',
+    'MUJERES': 'Mujeres',
+    'MOVILIDAD_CUIDADO': 'Dificultad para moverse',
+    # 'DIFIC_BICI': 'Dificultad para usar bicicleta',
+    # 'DIFIC_AUTO': 'Dificultad para usar automóvil',
+    # 'DIFIC_BUS': 'Dificultad para usar bus/microbús',
+    # 'DIFIC_TRANSMILENIO': 'Dificultad para usar TransMilenio',
+
 }
 
 MAP_BELOW_TAB_ACCESSIBILITY = {
     'TOT_POB': 'Poblacion',
-    'DIFIC_BICI': 'p9_id_dificultad_medios_transporte_11',
-    'DIFIC_AUTO': 'p9_id_dificultad_medios_transporte_2',
-    'DIFIC_BUS': 'p9_id_dificultad_medios_transporte_4',
-    'DIFIC_TRANSMILENIO': 'p9_id_dificultad_medios_transporte_5',
-    
-    # 'ANALF': 'Cant_PersAnalf',
-    # 'DISCAP': 'Cant_PersDiscap',
-    # 'MUJER_JEF_HOG': 'Mujeres_Jefas_Hogar',
-    # 'INDIGENAS': 'Indigenas',
-    # 'AFRO': 'Afrodescendientes',
+    'PEATON': 'peaton',
+    'BICIUSUARIO': 'bicicleta',
+    'MUJERES': 'mujer',
+    'MOVILIDAD_CUIDADO': 'movilidad_cuidado',
+    # 'DIFIC_BICI': 'p9_id_dificultad_medios_transporte_11',
+    # 'DIFIC_AUTO': 'p9_id_dificultad_medios_transporte_2',
+    # 'DIFIC_BUS': 'p9_id_dificultad_medios_transporte_4',
+    # 'DIFIC_TRANSMILENIO': 'p9_id_dificultad_medios_transporte_5',
+
 }
 
 # MAP_BELOW_TAB_ACCESSIBILITY = {
