@@ -35,11 +35,29 @@ from conf.credentials import MAPBOX_TOKEN
 
 current_path = Path()
 
-print("")
-
 
 accessibility_df, accessibility_geo = db.get_dataframe_from_sqlite_db(
     table_name='Accessibility', conn=db.conn)
+
+accessibility_df = pd.read_parquet("temp_acc_.parquet")
+
+geo_test = gpd.read_parquet("p9_id_dificultad_medios_transporte_5.parquet")
+
+
+# TODO
+accessibility_df['Cant_PersAnalf'] = np.random.randint(
+    1, 101, size=len(accessibility_df))
+accessibility_df['Cant_PersDiscap'] = np.random.randint(
+    1, 500, size=len(accessibility_df))
+
+accessibility_df['Mujeres_Jefas_Hogar'] = np.random.randint(
+    1, 500, size=len(accessibility_df))
+accessibility_df['Indigenas'] = np.random.randint(
+    1, 500, size=len(accessibility_df))
+accessibility_df['Afrodescendientes'] = np.random.randint(
+    1, 500, size=len(accessibility_df))
+# TODO
+
 
 hospitales_df, hospitales_geo = db.get_dataframe_from_sqlite_db(
     table_name='Hospitals', conn=db.conn, geo_type='point')
@@ -59,7 +77,6 @@ early_education_df, early_education_geo = db.get_dataframe_from_sqlite_db(
 
 secondary_education_df, secondary_education_geo = db.get_dataframe_from_sqlite_db(
     table_name='Early_Education', conn=db.conn, geo_type='point')
-
 
 
 def add_infraestructure_trace(fig, trace):
@@ -82,6 +99,21 @@ def add_infraestructure_trace(fig, trace):
             customdata=hospitales_df[['nombre']],
             hovertemplate="<b>Nombre:</b> %{customdata[0]}",
         )
+        # trace = go.Scattermapbox(
+        #     lat=geo_test.geometry.y,
+        #     lon=geo_test.geometry.x,
+        #     mode="markers",
+        #     marker=dict(
+        #         size=5,
+        #         color="#023e8a"
+        #     ),
+        #     # name=constants.HOSPITAL_TRACE_NAME,
+        #     # customdata=hospitales_df[['nombre']],
+        #     # hovertemplate="<b>Nombre:</b> %{customdata[0]}",
+        # )
+
+
+        
 
     if trace == constants.ATENCION_PRIMARIA_TRACE_NAME:
         trace = go.Scattermapbox(
@@ -158,6 +190,7 @@ def add_infraestructure_trace(fig, trace):
         )
         fig.update_layout(coloraxis_showscale=False)
 
+
     fig = fig.add_trace(trace)
 
     return fig
@@ -199,7 +232,7 @@ def init_map(df=accessibility_df, geodf=accessibility_geo,
 
 
 def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0],
-                   df=accessibility_df, filter={'all': True}):
+                   df=accessibility_df, filter={'all': True}, population="TOT_POB"):
 
     if not filter['all']:
         dfs = list()
@@ -210,6 +243,10 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
             temp_df = df[mask]
             dfs.append(temp_df)
         df = pd.concat(dfs).copy()
+
+    if not population == "TOT_POB":
+        df = df[df[constants.MAP_BELOW_TAB_ACCESSIBILITY[population]] > 0].copy()
+
 
     lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
     lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
@@ -249,8 +286,9 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
     fig_hex_map.update_traces(
         z=z,
         colorbar=colorbar,
+        locations=pd.Series(df.index.values).astype(str),
         colorscale=colorscale,
-        selector=dict(name=constants.MAP_TRACE_NAME)
+        selector=dict(name=constants.MAP_TRACE_NAME),
     )
 
     fig_hex_map.update_layout(
@@ -264,24 +302,27 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
     return fig_hex_map
 
 
-def get_bar_figure():
+def get_bar_figure(population=None):
 
-    # nse = accessibility_df.NSE_5.unique()
-    nse = [
-        '1 - Alto',
-        '2 - Medio-Alto',
-        '3 - Medio',
-        '4 - Medio-Bajo',
-        '5 - Bajo'
-    ]
+    if population is None:
+        population = list(constants.POPULATION_TYPES.keys())[0]
+        population_column = constants.MAP_BELOW_TAB_ACCESSIBILITY[population]
+
+    else:
+        population_column = constants.MAP_BELOW_TAB_ACCESSIBILITY[population]
+
+    nse = list(constants.NSE_5_DICTMAP.keys())
+
+    # population_column = "p9_id_dificultad_medios_transporte_2"
+
     y1 = accessibility_df[accessibility_df[constants.CATEGORICAL_VARIABLES[0]] == '1. Alta'][[
-        'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
+        'NSE_5', population_column]].groupby('NSE_5').sum()[population_column].values
     y2 = accessibility_df[accessibility_df[constants.CATEGORICAL_VARIABLES[0]] == '2. Media Alta'][[
-        'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
+        'NSE_5', population_column]].groupby('NSE_5').sum()[population_column].values
     y3 = accessibility_df[accessibility_df[constants.CATEGORICAL_VARIABLES[0]] == '3. Media Baja'][[
-        'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
+        'NSE_5', population_column]].groupby('NSE_5').sum()[population_column].values
     y4 = accessibility_df[accessibility_df[constants.CATEGORICAL_VARIABLES[0]] == '4. Baja'][[
-        'NSE_5', 'Poblacion']].groupby('NSE_5').sum()['Poblacion'].values
+        'NSE_5', population_column]].groupby('NSE_5').sum()[population_column].values
 
     fig_below_map.update(
         data=[
@@ -307,7 +348,8 @@ def get_bar_figure():
 
     fig_below_map.update_layout(
         xaxis_title="Nivel socioeconómico",
-        yaxis_title="Habitantes",
+        # yaxis_title=constants.POPULATION_TYPES[population],
+        yaxis_title="Número de personas",
         legend_title="  Accesibilidad",
         margin=dict(l=30, r=0, t=30, b=0),
         barmode='stack',
@@ -414,9 +456,6 @@ left_panel_content = [
              'value': constants.SECONDARY_EDUCATION_TRACENAME},
             {'label': 'Espacios verdes',
              'value': constants.ESPACIOS_VERDES_TRACE_NAME},
-
-
-
         ],
         clearable=False,
         style={'margin-bottom': '50px', },
@@ -492,7 +531,7 @@ bottom_graph_layout = [
     html.Div(
         children=[
             dcc.Graph(
-                id=constants.SCATTER_ID,
+                id=constants.BELOW_GRAPH_ID,
                 figure=get_bar_figure(),
                 config={
                     'displayModeBar': False
@@ -556,22 +595,46 @@ selector_panel_layout = [
 
 below_graph_control_panel = [
     html.Div(
-        dbc.Tabs(
-            [
-                dbc.Tab(
-                    label="Nivel socieconómico", tab_id="tab-1", className="nav-link"),
-                dbc.Tab(
-                    label="Option 2", tab_id="tab-2", className="nav-link"),
+        id="below-graph-control-panel",
+        children=[
+            # dbc.Tabs(
+            #     [
+            #         dbc.Tab(
+            #             label=constants.POPULATION_TYPES['tab-1'], tab_id="tab-1", className="nav-link"),
+            #         dbc.Tab(
+            #             label=constants.POPULATION_TYPES['tab-2'], tab_id="tab-2", className="nav-link"),
+            #         dbc.Tab(
+            #             label=constants.POPULATION_TYPES['tab-3'], tab_id="tab-3", className="nav-link"),
+            #         dbc.Tab(
+            #             label=constants.POPULATION_TYPES['tab-4'], tab_id="tab-3", className="nav-link"),
+            #         dbc.Tab(
+            #             label=constants.POPULATION_TYPES['tab-5'], tab_id="tab-3", className="nav-link"),
+            #     ],
+            #     id="below-tabs",
+            #     active_tab="tab-1",
+            #     className="below-graph-tabs",
+            #     style={"font-size": "15px",
+            #            "margin-left": "32px", "margin-bottom": "6px",
+            #            "display": "none"
+            #            }
+            # ),
+            dcc.Dropdown(
+                id=constants.BELOW_TABS,
+                options=[
+                    {"label": constants.POPULATION_TYPES[value], "value": value} for value in constants.POPULATION_TYPES
+                ],
+                value=list(constants.POPULATION_TYPES.keys())[0],
+                clearable=False,
+                style={
+                    "width": "calc(300px)",
+                    "margin-left": "16px"
+                }
+            ),
+        ]
 
-            ],
-            id="below-tabs",
-            active_tab="tab-1",
-            className="below-graph-tabs",
-            style={"font-size": "15px",
-                   "margin-left": "32px", "margin-bottom": "6px",
 
-                   }
-        )
+
+
     ),
 
     dbc.Button(
@@ -586,7 +649,7 @@ below_graph_control_panel = [
         ],
         id="hide-show-bottom-graph-panel",
         style={
-            "background-color": "#323232",
+            "background-color": "rgb(30,30,30)",
             "color": "white",
             "border": "none",
             "width": "32px",
@@ -598,6 +661,7 @@ below_graph_control_panel = [
         },
     )
 ]
+
 
 
 app.layout = html.Div(
@@ -639,7 +703,7 @@ app.layout = html.Div(
                                     children=below_graph_control_panel,
                                     style={
                                         "width": "100%", "height": "5vh",
-                                        "background-color": "#323232",
+                                        "background-color": "rgb(30, 30, 30)",
                                         "display": "flex",
                                         "align-items": "center",
                                     }
@@ -715,6 +779,8 @@ def hide_show_left_panel(n_clicks):
         Output(component_id=constants.VARIABLE_SELECTOR,
                component_property='value'),
         Output(component_id=constants.MAP_ID, component_property='figure'),
+        Output(component_id=constants.BELOW_GRAPH_ID,
+               component_property='figure'),
     ],
 
     [
@@ -723,31 +789,35 @@ def hide_show_left_panel(n_clicks):
               component_property='value'),
         Input(component_id=constants.VARIABLE_SELECTOR,
               component_property='value'),
-        Input(constants.SCATTER_ID, 'selectedData'),
+        Input(constants.BELOW_GRAPH_ID, 'selectedData'),
+        Input(constants.BELOW_TABS, 'value'),
         Input(constants.INFRA_CHECKLIST_ID, 'value'),
-
     ],
 
 )
-def update_output_div(city, category, variable, belowGraphSelectedData, infra_selection):
+def update_output_div(city, category, variable, below_graph_selected_data, below_graph_selected_value, infra_selection):
     triggered_input = ctx.triggered_id
 
     if triggered_input is None:
         raise PreventUpdate
-        # return dash.no_update, dash.no_update, dash.no_update
+
+    if triggered_input == constants.BELOW_TABS:
+
+        return dash.no_update, dash.no_update, update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable, population=below_graph_selected_value), get_bar_figure(population=below_graph_selected_value)
 
     if triggered_input == constants.INFRA_CHECKLIST_ID:
         map_fig = add_infraestructure_trace(fig_hex_map, infra_selection)
 
-        return dash.no_update, dash.no_update, map_fig
+        return dash.no_update, dash.no_update, map_fig, dash.no_update
 
-    if (triggered_input == constants.SCATTER_ID):
-        if (belowGraphSelectedData is not None):
+    if (triggered_input == constants.BELOW_GRAPH_ID):
+
+        if (below_graph_selected_data is not None):
             nse_selection = {
                 'all': False,
                 'selected': dict()
             }
-            for selection in belowGraphSelectedData['points']:
+            for selection in below_graph_selected_data['points']:
                 accesibilidad = fig_below_map['data'][selection['curveNumber']]['name']
                 nse = selection['x']
                 if nse not in nse_selection['selected']:
@@ -759,7 +829,8 @@ def update_output_div(city, category, variable, belowGraphSelectedData, infra_se
             }
 
         return dash.no_update, dash.no_update, update_hex_map(
-            city=city, fig_hex_map=fig_hex_map, variable=variable, filter=nse_selection)
+            city=city, fig_hex_map=fig_hex_map, variable=variable, filter=nse_selection, 
+            population=below_graph_selected_value), dash.no_update
 
     if triggered_input == constants.CATEGORY_SELECTOR:
         if category == 'ACC':
@@ -772,11 +843,11 @@ def update_output_div(city, category, variable, belowGraphSelectedData, infra_se
             variable = constants.CATEGORICAL_VARIABLES[1]
         if category == 'INFRA':
 
-            return dash.no_update, dash.no_update, dash.no_update
+            return dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
-        return variable_options, variable, update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable)
+        return variable_options, variable, update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable, population=below_graph_selected_value), dash.no_update
 
-    return dash.no_update, dash.no_update, update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable)
+    return dash.no_update, dash.no_update, update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable, population=below_graph_selected_value), dash.no_update
 
 
 @app.callback(
@@ -791,8 +862,8 @@ def toggle_modal(n1, n2, is_open):
 
 
 @app.callback(
-    dash.dependencies.Output("modal-body", "children"),
-    [dash.dependencies.Input("modal-tabs", "active_tab")],
+    Output("modal-body", "children"),
+    [Input("modal-tabs", "active_tab")],
 )
 def render_tab_content(active_tab):
     if active_tab == "tab-1":

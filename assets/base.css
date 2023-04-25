@@ -189,3 +189,26 @@ a {
     padding-right: 12px;
 }
 
+/* #below-graph-control-panel .Select-menu-outer {
+    background-color: red;
+    color: white;
+}   */
+
+#below-graph-control-panel .Select-control {
+    background-color: rgb(30,30,30) !important;
+    margin: 0px;
+    border: none;
+    border-bottom: solid 2px #FFF;
+    border-radius: 0px;
+    padding: 0px;
+    margin-left: 100px;
+  }
+
+  #below-graph-control-panel .Select-value {
+    padding: 0px;
+    height: auto;
+  }
+
+  #below-graph-control-panel .Select-menu-outer {
+    margin-left: 16px;
+  }

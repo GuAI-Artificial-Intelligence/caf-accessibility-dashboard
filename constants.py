@@ -21,17 +21,63 @@ ACCESIBILITY_MEANS = {
 }
 
 # Components IDs
-SCATTER_ID = "my-scatter"
+BELOW_GRAPH_ID = "below-graph"
 MAP_ID = 'my-map'
 CITY_SELECTOR = 'my-city-selector'
 ACCESIBILITY_SELECTOR = 'my-accesibility-selector'
 CATEGORY_SELECTOR = 'my-category-selector'
 VARIABLE_SELECTOR = 'my-variable-selector'
 INFRA_CHECKLIST_ID = 'infra-checklist'
+BELOW_TABS = 'below-tabs'
 
 CATEGORICAL_VARIABLES = ['IndiAcce_1', 'NSE_5']
 NON_CATEGORICAL_VARIABLES = ['Poblacion']
 GEO_VARIABLES = ['geometry']
+
+# POPULATION_TYPES = {
+#     'TOT_POB': 'Toda la poblacion',
+#     'ANALF': 'Personas analfabetas',
+#     'DISCAP': 'Personas discapacitadas',
+#     'MUJER_JEF_HOG': 'Mujeres jefas de hogar',
+#     'INDIGENAS': 'Indígenas',
+#     'AFRO': 'Afrodescendientes',
+# }
+
+POPULATION_TYPES = {
+    'TOT_POB': 'Toda la poblacion',
+    'DIFIC_BICI': 'Dificultad para usar bicicleta',
+    'DIFIC_AUTO': 'Dificultad para usar automóvil',
+    'DIFIC_BUS': 'Dificultad para usar bus/microbús',
+    'DIFIC_TRANSMILENIO': 'Dificultad para usar TransMilenio',
+    # 'ANALF': 'Personas analfabetas',
+    # 'DISCAP': 'Personas discapacitadas',
+    # 'MUJER_JEF_HOG': 'Mujeres jefas de hogar',
+    # 'INDIGENAS': 'Indígenas',
+    # 'AFRO': 'Afrodescendientes',
+}
+
+MAP_BELOW_TAB_ACCESSIBILITY = {
+    'TOT_POB': 'Poblacion',
+    'DIFIC_BICI': 'p9_id_dificultad_medios_transporte_11',
+    'DIFIC_AUTO': 'p9_id_dificultad_medios_transporte_2',
+    'DIFIC_BUS': 'p9_id_dificultad_medios_transporte_4',
+    'DIFIC_TRANSMILENIO': 'p9_id_dificultad_medios_transporte_5',
+    
+    # 'ANALF': 'Cant_PersAnalf',
+    # 'DISCAP': 'Cant_PersDiscap',
+    # 'MUJER_JEF_HOG': 'Mujeres_Jefas_Hogar',
+    # 'INDIGENAS': 'Indigenas',
+    # 'AFRO': 'Afrodescendientes',
+}
+
+# MAP_BELOW_TAB_ACCESSIBILITY = {
+#     'TOT_POB': 'Poblacion',
+#     'ANALF': 'Cant_PersAnalf',
+#     'DISCAP': 'Cant_PersDiscap',
+#     'MUJER_JEF_HOG': 'Mujeres_Jefas_Hogar',
+#     'INDIGENAS': 'Indigenas',
+#     'AFRO': 'Afrodescendientes',
+# }
 
 NSE_3_DICTMAP = {
     '1 - Alto': 3,
@@ -78,13 +124,13 @@ CATEGORICAL_COLORBAR = dict(
 )
 
 HIDDEN_COLORBAR = dict(
-    orientation='v',
-    thickness=0.04,
-    y=0.32,
-    x=0.909,
-    len=0.04,
-    tickfont=dict(color="#323232", size=1)
-
+    orientation='h',
+    thickness=1,
+    y=0.0,
+    x=0.0,
+    len=0.05,
+    tickfont=dict(color="rgba(0,0,0,0)", 
+    size=10)
 )
 
 HIDDEN_COLORSCALE = ['#1b4332', '#1b4332', '#1b4332', '#1b4332']
@@ -458,4 +504,3 @@ ATENCION_PRIMARIA_TRACE_NAME = 'ATENCION_PRIMARIA'
 EARLY_EDUCATION_TRACENAME = 'EDUCACION_INICIAL'
 PRIMARY_EDUCATION_TRACENAME = 'EDUCACION_PRIMARIA'
 SECONDARY_EDUCATION_TRACENAME = 'EDUCACION_SECUNDARIA'
-
