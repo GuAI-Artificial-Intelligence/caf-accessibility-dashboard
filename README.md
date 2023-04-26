@@ -46,7 +46,7 @@ If you would like to contribute to this project, please follow the guidelines be
 
 ## License
 
-This project is licensed under the MIT License license. Please see https://opensource.org/licenses/MIT for more information.
+This project is licensed under the MIT License license. Please see the LICENSE file for more information.
 
 ## Contact
 
