@@ -40,32 +40,16 @@ current_path = Path()
 accessibility_df, accessibility_geo = db.get_dataframe_from_sqlite_db(
     table_name='Accessibility', conn=db.conn)
 
-accessibility_df = pd.read_parquet("temp_acc_.parquet")
-
-geo_test = gpd.read_parquet("p9_id_dificultad_medios_transporte_5.parquet")
-
-
-# TODO
-accessibility_df['Cant_PersAnalf'] = np.random.randint(
-    1, 101, size=len(accessibility_df))
-accessibility_df['Cant_PersDiscap'] = np.random.randint(
-    1, 500, size=len(accessibility_df))
-
-accessibility_df['Mujeres_Jefas_Hogar'] = np.random.randint(
-    1, 500, size=len(accessibility_df))
-accessibility_df['Indigenas'] = np.random.randint(
-    1, 500, size=len(accessibility_df))
-accessibility_df['Afrodescendientes'] = np.random.randint(
-    1, 500, size=len(accessibility_df))
-# TODO
-
 
 hospitales_df, hospitales_geo = db.get_dataframe_from_sqlite_db(
     table_name='Hospitals', conn=db.conn, geo_type='point')
 
+
+
 espacios_verdes_df, espacios_verde_geo = db.get_dataframe_from_sqlite_db(
     table_name='Green_Areas', conn=db.conn)
 espacios_verdes_df['name'].fillna(value='No disponible', inplace=True)
+
 
 primary_health_care_df, primary_health_care_geo = db.get_dataframe_from_sqlite_db(
     table_name='Primary_Health_Care', conn=db.conn, geo_type='point')
@@ -73,11 +57,18 @@ primary_health_care_df, primary_health_care_geo = db.get_dataframe_from_sqlite_d
 primary_education_df, primary_education_geo = db.get_dataframe_from_sqlite_db(
     table_name='Primary_Education', conn=db.conn, geo_type='point')
 
+
+
+
 early_education_df, early_education_geo = db.get_dataframe_from_sqlite_db(
     table_name='Early_Education', conn=db.conn, geo_type='point')
 
+
+
+
 secondary_education_df, secondary_education_geo = db.get_dataframe_from_sqlite_db(
     table_name='Early_Education', conn=db.conn, geo_type='point')
+
 
 
 def add_infraestructure_trace(fig, trace):
@@ -100,18 +91,6 @@ def add_infraestructure_trace(fig, trace):
             customdata=hospitales_df[['nombre']],
             hovertemplate="<b>Nombre:</b> %{customdata[0]}",
         )
-        # trace = go.Scattermapbox(
-        #     lat=geo_test.geometry.y,
-        #     lon=geo_test.geometry.x,
-        #     mode="markers",
-        #     marker=dict(
-        #         size=5,
-        #         color="#023e8a"
-        #     ),
-        #     # name=constants.HOSPITAL_TRACE_NAME,
-        #     # customdata=hospitales_df[['nombre']],
-        #     # hovertemplate="<b>Nombre:</b> %{customdata[0]}",
-        # )
 
     if trace == constants.ATENCION_PRIMARIA_TRACE_NAME:
         trace = go.Scattermapbox(
@@ -170,8 +149,13 @@ def add_infraestructure_trace(fig, trace):
         )
 
     if trace == constants.ESPACIOS_VERDES_TRACE_NAME:
+
+
         trace_gdf = espacios_verdes_df.copy()
         trace_gdf['z'] = 1
+
+
+
         trace = go.Choroplethmapbox(
             geojson=espacios_verde_geo,
             z=trace_gdf['z'].values,
@@ -298,7 +282,7 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
     return fig_hex_map
 
 
-def get_bar_figure(population=None):
+def get_bar_figure(population=None, city="Bogotá"):
 
     if population is None:
         population = list(constants.POPULATION_TYPES.keys())[0]
@@ -309,97 +293,83 @@ def get_bar_figure(population=None):
 
     nse = list(constants.NSE_5_DICTMAP.keys())
 
-    go.Box
+    df = accessibility_df[accessibility_df.city==city]
+
 
     # -----------------Bar plot-----------------#
 
-    # y1 = accessibility_df[accessibility_df[constants.CATEGORICAL_VARIABLES[0]] == '1. Alta'][[
-    #     'NSE_5', population_column]].groupby('NSE_5').sum()[population_column].values
-    # y2 = accessibility_df[accessibility_df[constants.CATEGORICAL_VARIABLES[0]] == '2. Media Alta'][[
-    #     'NSE_5', population_column]].groupby('NSE_5').sum()[population_column].values
-    # y3 = accessibility_df[accessibility_df[constants.CATEGORICAL_VARIABLES[0]] == '3. Media Baja'][[
-    #     'NSE_5', population_column]].groupby('NSE_5').sum()[population_column].values
-    # y4 = accessibility_df[accessibility_df[constants.CATEGORICAL_VARIABLES[0]] == '4. Baja'][[
-    #     'NSE_5', population_column]].groupby('NSE_5').sum()[population_column].values
+    y1 = df[df[constants.CATEGORICAL_VARIABLES[0]] == '1. Alta'][[
+        'NSE_5', population_column]].groupby('NSE_5').sum()[population_column].values
+    y2 = df[df[constants.CATEGORICAL_VARIABLES[0]] == '2. Media Alta'][[
+        'NSE_5', population_column]].groupby('NSE_5').sum()[population_column].values
+    y3 = df[df[constants.CATEGORICAL_VARIABLES[0]] == '3. Media Baja'][[
+        'NSE_5', population_column]].groupby('NSE_5').sum()[population_column].values
+    y4 = df[df[constants.CATEGORICAL_VARIABLES[0]] == '4. Baja'][[
+        'NSE_5', population_column]].groupby('NSE_5').sum()[population_column].values
 
     # -----------------Bar plot-----------------#
 
-    variable = "SaluHosp_AvgTime_walk"
-    y1 = accessibility_df[accessibility_df.NSE_5 ==
-                          '1 - Alto'][variable].values
-    y2 = accessibility_df[accessibility_df.NSE_5 ==
-                          '2 - Medio-Alto'][variable].values
-    y3 = accessibility_df[accessibility_df.NSE_5 ==
-                          '3 - Medio'][variable].values
-    y4 = accessibility_df[accessibility_df.NSE_5 ==
-                          '4 - Medio-Bajo'][variable].values
-    y5 = accessibility_df[accessibility_df.NSE_5 ==
-                          '5 - Bajo'][variable].values
-
-    # fig_below_map.update(
-    #     data=[
-    #         go.Bar(
-    #             name='4. Baja', x=nse, y=y4, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[0],
-    #             hoverinfo='none'
-    #         ),
-
-    #         go.Bar(
-    #             name='3. Media Baja', x=nse, y=y3, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[1],
-    #             hoverinfo='none'
-    #         ),
-    #         go.Bar(
-    #             name='2. Media Alta', x=nse, y=y2, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[2],
-    #             hoverinfo='none'
-    #         ),
-    #         go.Bar(
-    #             name='1. Alta', x=nse, y=y1, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[3],
-    #             hoverinfo='none'
-    #         ),
-    #     ]
-    # )
+    # variable = "SaluHosp_AvgTime_walk"
+    # y1 = accessibility_df[accessibility_df.NSE_5 ==
+    #                       '1 - Alto'][variable].values
+    # y2 = accessibility_df[accessibility_df.NSE_5 ==
+    #                       '2 - Medio-Alto'][variable].values
+    # y3 = accessibility_df[accessibility_df.NSE_5 ==
+    #                       '3 - Medio'][variable].values
+    # y4 = accessibility_df[accessibility_df.NSE_5 ==
+    #                       '4 - Medio-Bajo'][variable].values
+    # y5 = accessibility_df[accessibility_df.NSE_5 ==
+    #                       '5 - Bajo'][variable].values
 
     fig_below_map.update(
         data=[
-            go.Box(
-                y=y1, name='1 - Alto', boxpoints=False,
-            ),
-            go.Box(
-                y=y2, name='2 - Medio-Alto', boxpoints=False,
-            ),
-            go.Box(
-                y=y3, name='3 - Medio', boxpoints=False,
-            ),
-            go.Box(
-                y=y4, name='4 - Medio-Bajo', boxpoints=False,
-            ),
-            go.Box(
-                y=y5, name='5 - Bajo', boxpoints=False,
+            go.Bar(
+                name='4. Baja', x=nse, y=y4, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[0],
+                hoverinfo='none'
             ),
 
+            go.Bar(
+                name='3. Media Baja', x=nse, y=y3, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[1],
+                hoverinfo='none'
+            ),
+            go.Bar(
+                name='2. Media Alta', x=nse, y=y2, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[2],
+                hoverinfo='none'
+            ),
+            go.Bar(
+                name='1. Alta', x=nse, y=y1, width=0.4, marker_color=constants.INDIACCE_COLORSCALE[3],
+                hoverinfo='none'
+            ),
         ]
     )
 
-    fig_below_map.update_layout(
-        xaxis_title="Nivel socioeconómico",
-        yaxis_title="Tiempo (minutos)",
-        showlegend=False,
-        margin=dict(l=30, r=0, t=30, b=0),
-        # barmode='stack',
-        paper_bgcolor='#323232',
-        plot_bgcolor="#323232",
-        font=dict(
-            color="white"
-        ),
-        dragmode='select',
-    )
+    # fig_below_map.update(
+    #     data=[
+    #         go.Box(
+    #             y=y1, name='1 - Alto', boxpoints=False,
+    #         ),
+    #         go.Box(
+    #             y=y2, name='2 - Medio-Alto', boxpoints=False,
+    #         ),
+    #         go.Box(
+    #             y=y3, name='3 - Medio', boxpoints=False,
+    #         ),
+    #         go.Box(
+    #             y=y4, name='4 - Medio-Bajo', boxpoints=False,
+    #         ),
+    #         go.Box(
+    #             y=y5, name='5 - Bajo', boxpoints=False,
+    #         ),
+
+    #     ]
+    # )
 
     # fig_below_map.update_layout(
     #     xaxis_title="Nivel socioeconómico",
-    #     # yaxis_title=constants.POPULATION_TYPES[population],
-    #     yaxis_title="Número de personas",
-    #     legend_title="  Accesibilidad",
+    #     yaxis_title="Tiempo (minutos)",
+    #     showlegend=False,
     #     margin=dict(l=30, r=0, t=30, b=0),
-    #     barmode='stack',
+    #     # barmode='stack',
     #     paper_bgcolor='#323232',
     #     plot_bgcolor="#323232",
     #     font=dict(
@@ -407,6 +377,21 @@ def get_bar_figure(population=None):
     #     ),
     #     dragmode='select',
     # )
+
+    fig_below_map.update_layout(
+        xaxis_title="Nivel socioeconómico",
+        # yaxis_title=constants.POPULATION_TYPES[population],
+        yaxis_title="Número de personas",
+        legend_title="  Accesibilidad",
+        margin=dict(l=30, r=0, t=30, b=0),
+        barmode='stack',
+        paper_bgcolor='#323232',
+        plot_bgcolor="#323232",
+        font=dict(
+            color="white"
+        ),
+        dragmode='select',
+    )
 
     return fig_below_map
 
@@ -849,7 +834,7 @@ def update_output_div(city, category, variable, below_graph_selected_data, below
 
     if triggered_input == constants.BELOW_TABS:
 
-        return dash.no_update, dash.no_update, update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable, population=below_graph_selected_value), get_bar_figure(population=below_graph_selected_value)
+        return dash.no_update, dash.no_update, update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable, population=below_graph_selected_value), get_bar_figure(population=below_graph_selected_value, city=city)
 
     if triggered_input == constants.INFRA_CHECKLIST_ID:
         map_fig = add_infraestructure_trace(fig_hex_map, infra_selection)
@@ -893,7 +878,7 @@ def update_output_div(city, category, variable, below_graph_selected_data, below
 
         return variable_options, variable, update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable, population=below_graph_selected_value), dash.no_update
 
-    return dash.no_update, dash.no_update, update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable, population=below_graph_selected_value), dash.no_update
+    return dash.no_update, dash.no_update, update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable, population=below_graph_selected_value), get_bar_figure(population=below_graph_selected_value, city=city)
 
 
 @app.callback(
