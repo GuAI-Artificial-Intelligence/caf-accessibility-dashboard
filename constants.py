@@ -27,12 +27,15 @@ CITY_SELECTOR = 'my-city-selector'
 ACCESIBILITY_SELECTOR = 'my-accesibility-selector'
 CATEGORY_SELECTOR = 'my-category-selector'
 VARIABLE_SELECTOR = 'my-variable-selector'
+TRANSPORT_MODE_SELECTOR = 'my-transport-mode-selector'
 INFRA_CHECKLIST_ID = 'infra-checklist'
 BELOW_TABS = 'below-tabs'
 
 CATEGORICAL_VARIABLES = ['IndiAcce_1', 'NSE_5']
 NON_CATEGORICAL_VARIABLES = ['Poblacion']
 GEO_VARIABLES = ['geometry']
+
+TRANSPORT_MODES = ['Todos', 'A pie', 'Bicicleta', 'Carro']
 
 # POPULATION_TYPES = {
 #     'TOT_POB': 'Toda la poblacion',
@@ -128,8 +131,8 @@ HIDDEN_COLORBAR = dict(
     y=0.0,
     x=0.0,
     len=0.05,
-    tickfont=dict(color="rgba(0,0,0,0)", 
-    size=10)
+    tickfont=dict(color="rgba(0,0,0,0)",
+                  size=10)
 )
 
 HIDDEN_COLORSCALE = ['#1b4332', '#1b4332', '#1b4332', '#1b4332']
@@ -503,3 +506,73 @@ ATENCION_PRIMARIA_TRACE_NAME = 'ATENCION_PRIMARIA'
 EARLY_EDUCATION_TRACENAME = 'EDUCACION_INICIAL'
 PRIMARY_EDUCATION_TRACENAME = 'EDUCACION_PRIMARIA'
 SECONDARY_EDUCATION_TRACENAME = 'EDUCACION_SECUNDARIA'
+
+
+VARIABLE_OPTIONS_CAR = [
+    {'label': 'Salud (Atención primaria): Distancia (km)',
+     'value': 'avg_distance_primary_health_care_driving_car'},
+    {'label': 'Salud (Atención primaria): Tiempo (min)',
+     'value': 'avg_duration_primary_health_care_driving_car'},
+    {'label': 'Salud (Hospitales): Distancia (km)',
+     'value': 'avg_distance_hospitals_driving_car'},
+    {'label': 'Salud (Hospitales): Tiempo (min)',
+     'value': 'avg_duration_hospitals_driving_car'},
+    {'label': 'Educación (Inicial): Distancia (km)',
+     'value': 'avg_distance_early_education_driving_car'},
+    {'label': 'Educación (Inicial): Tiempo (min)',
+     'value': 'avg_duration_early_education_driving_car'},
+    {'label': 'Educación (Primaria): Distancia (km)',
+     'value': 'avg_distance_primary_education_driving_car'},
+    {'label': 'Educación (Primaria): Tiempo (min)',
+     'value': 'avg_duration_primary_education_driving_car'},
+    {'label': 'Educación (Secundaria): Distancia (km)',
+     'value': 'avg_distance_secondary_education_driving_car'},
+    {'label': 'Educación (Secundaria): Tiempo (min)',
+     'value': 'avg_duration_secondary_education_driving_car'},
+]
+
+VARIABLE_OPTIONS_BYCICLE = [
+    {'label': 'Salud (Atención primaria): Distancia (km)',
+     'value': 'avg_distance_primary_health_care_cycling_regular'},
+    {'label': 'Salud (Atención primaria): Tiempo (min)',
+     'value': 'avg_duration_primary_health_care_cycling_regular'},
+    {'label': 'Salud (Hospitales): Distancia (km)',
+     'value': 'avg_distance_hospitals_cycling_regular'},
+    {'label': 'Salud (Hospitales): Tiempo (min)',
+     'value': 'avg_duration_hospitals_cycling_regular'},
+    {'label': 'Educación (Inicial): Distancia (km)',
+     'value': 'avg_distance_early_education_cycling_regular'},
+    {'label': 'Educación (Inicial): Tiempo (min)',
+     'value': 'avg_duration_early_education_cycling_regular'},
+    {'label': 'Educación (Primaria): Distancia (km)',
+     'value': 'avg_distance_primary_education_cycling_regular'},
+    {'label': 'Educación (Primaria): Tiempo (min)',
+     'value': 'avg_duration_primary_education_cycling_regular'},
+    {'label': 'Educación (Secundaria): Distancia (km)',
+     'value': 'avg_distance_secondary_education_cycling_regular'},
+    {'label': 'Educación (Secundaria): Tiempo (min)',
+     'value': 'avg_duration_secondary_education_cycling_regular'},
+]
+
+VARIABLE_OPTIONS_FOOT = [
+    {'label': 'Salud (Atención primaria): Distancia (km)',
+     'value': 'avg_distance_primary_health_care_foot_walking'},
+    {'label': 'Salud (Atención primaria): Tiempo (min)',
+     'value': 'avg_duration_primary_health_care_foot_walking'},
+    {'label': 'Salud (Hospitales): Distancia (km)',
+     'value': 'avg_distance_hospitals_foot_walking'},
+    {'label': 'Salud (Hospitales): Tiempo (min)',
+     'value': 'avg_duration_hospitals_foot_walking'},
+    {'label': 'Educación (Inicial): Distancia (km)',
+     'value': 'avg_distance_early_education_foot_walking'},
+    {'label': 'Educación (Inicial): Tiempo (min)',
+     'value': 'avg_duration_early_education_foot_walking'},
+    {'label': 'Educación (Primaria): Distancia (km)',
+     'value': 'avg_distance_primary_education_foot_walking'},
+    {'label': 'Educación (Primaria): Tiempo (min)',
+     'value': 'avg_duration_primary_education_foot_walking'},
+    {'label': 'Educación (Secundaria): Distancia (km)',
+     'value': 'avg_distance_secondary_education_foot_walking'},
+    {'label': 'Educación (Secundaria): Tiempo (min)',
+     'value': 'avg_duration_secondary_education_foot_walking'},
+]
