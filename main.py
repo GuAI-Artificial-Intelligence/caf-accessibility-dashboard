@@ -258,6 +258,7 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
             colorbar['title'] = '<b>Nivel socio<br>económico</b><br> .'
     else:
         z = df[variable]
+        z_city = df[df.city == city][variable]
         title = variable
         if "distance" in variable:
             title = "Distancia (km)"
@@ -266,9 +267,11 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
         colorbar = constants.CATEGORICAL_COLORBAR
         colorbar['title'] = f'<b>{title}</b><br> .'
         colorbar['tickmode'] = 'auto'
-        zmin = z.min(),
-        zmin = zmin[0]
-        zmax = df[variable].quantile(0.9)
+        # zmin = min(z_city),
+        # zmin = zmin[0]
+        # zmin = df[variable].quantile(0.9)
+        zmin = z_city.quantile(0.0)
+        zmax = z_city.quantile(0.9)
 
     fig_hex_map.update_traces(
         z=z,
@@ -358,16 +361,16 @@ def get_bar_figure(population=None, city="Bogotá", variable=constants.CATEGORIC
     # ----------------- End Bar Plot-----------------#
     else:
 
-        y1 = accessibility_df[accessibility_df.NSE_5 ==
-                              '1 - Alto'][variable].values
-        y2 = accessibility_df[accessibility_df.NSE_5 ==
-                              '2 - Medio-Alto'][variable].values
-        y3 = accessibility_df[accessibility_df.NSE_5 ==
-                              '3 - Medio'][variable].values
-        y4 = accessibility_df[accessibility_df.NSE_5 ==
-                              '4 - Medio-Bajo'][variable].values
-        y5 = accessibility_df[accessibility_df.NSE_5 ==
-                              '5 - Bajo'][variable].values
+        y1 = df[df.NSE_5 ==
+                '1 - Alto'][variable].values
+        y2 = df[df.NSE_5 ==
+                '2 - Medio-Alto'][variable].values
+        y3 = df[df.NSE_5 ==
+                '3 - Medio'][variable].values
+        y4 = df[df.NSE_5 ==
+                '4 - Medio-Bajo'][variable].values
+        y5 = df[df.NSE_5 ==
+                '5 - Bajo'][variable].values
 
         fig_below_map.update(
             data=[
@@ -444,9 +447,8 @@ left_panel_content = [
     ),
     html.H6('Seleccione un ciudad:'),
     dcc.Dropdown(
-        # options=list(
-        #     constants.CENTER_CITY_COORDINATES.keys()),
-        options=["Bogotá"],
+        options=list(
+            constants.CENTER_CITY_COORDINATES.keys()),
         value=list(
             constants.CENTER_CITY_COORDINATES.keys())[0],
         id=constants.CITY_SELECTOR,
@@ -814,6 +816,7 @@ def hide_show_left_panel(n_clicks):
                component_property='figure'),
         Output(constants.TRANSPORT_MODE_SELECTOR, 'disabled'),
         Output(constants.TRANSPORT_MODE_SELECTOR, 'value'),
+        Output(constants.BELOW_TABS, 'options')
     ],
 
     [
@@ -841,6 +844,24 @@ def update_output_div(city,
     if triggered_input is None:
         raise PreventUpdate
 
+    if triggered_input == constants.CITY_SELECTOR:
+        if city == "Bogotá":
+            options = [
+                {"label": constants.POPULATION_TYPES[value], "value": value} for value in constants.POPULATION_TYPES
+            ]
+        if city == "Cuenca":
+            options = [
+                {"label": constants.POPULATION_TYPES["TOT_POB"], "value": "TOT_POB"}
+            ]
+        return (dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                options)
+
+
     transport_mode_disabled = False
 
     if triggered_input == constants.BELOW_TABS:
@@ -852,6 +873,7 @@ def update_output_div(city,
                 get_bar_figure(
                     population=below_graph_selected_value, city=city, variable=variable),
                 transport_mode_disabled,
+                dash.no_update,
                 dash.no_update)
 
     if triggered_input == constants.INFRA_CHECKLIST_ID:
@@ -862,6 +884,7 @@ def update_output_div(city,
                 map_fig,
                 dash.no_update,
                 transport_mode_disabled,
+                dash.no_update,
                 dash.no_update)
 
     if (triggered_input == constants.BELOW_GRAPH_ID):
@@ -893,8 +916,9 @@ def update_output_div(city,
                 }
                 for curve in curves:
                     nse = curve_nse_map[curve]
-                    nse_selection['selected'][nse] = {'1. Alta', '2. Media Alta', '3. Media Baja', '4. Baja'}
-                    
+                    nse_selection['selected'][nse] = {
+                        '1. Alta', '2. Media Alta', '3. Media Baja', '4. Baja'}
+
         # TODO:
         # After selecting some data in the bellow graph, how can I return to the whole data selection
 
@@ -912,6 +936,7 @@ def update_output_div(city,
                 get_bar_figure(
                     population=below_graph_selected_value, city=city, variable=variable),
                 transport_mode_disabled,
+                dash.no_update,
                 dash.no_update)
 
     if triggered_input == constants.CATEGORY_SELECTOR:
@@ -932,7 +957,8 @@ def update_output_div(city,
                 get_bar_figure(population=below_graph_selected_value,
                                city=city, variable=variable),
                 transport_mode_disabled,
-                constants.TRANSPORT_MODES[0])
+                constants.TRANSPORT_MODES[0],
+                dash.no_update)
 
     if triggered_input == constants.TRANSPORT_MODE_SELECTOR:
 
@@ -960,6 +986,7 @@ def update_output_div(city,
                 get_bar_figure(population=below_graph_selected_value,
                                city=city, variable=variable),
                 transport_mode_disabled,
+                dash.no_update,
                 dash.no_update)
 
     return (dash.no_update,
@@ -969,6 +996,7 @@ def update_output_div(city,
             get_bar_figure(population=below_graph_selected_value,
                            city=city, variable=variable),
             transport_mode_disabled,
+            dash.no_update,
             dash.no_update)
 
 
