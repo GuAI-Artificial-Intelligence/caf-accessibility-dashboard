@@ -6,8 +6,8 @@ CUENCA_STR = 'Cuenca'
 
 CENTER_CITY_COORDINATES = {
     BOGOTA_STR: {
-        'center_lat': 4.7110,
-        'center_lon': -74.0721
+        'center_lat': 4.63666639058129,
+        'center_lon': -74.10107684673169
     },
     CUENCA_STR: {
         'center_lat': -2.891889142459372,

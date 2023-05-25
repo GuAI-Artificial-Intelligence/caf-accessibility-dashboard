@@ -204,7 +204,7 @@ def init_map(df=accessibility_df, geodf=accessibility_geo,
             "lat": constants.CENTER_CITY_COORDINATES[city]['center_lat'],
             "lon": constants.CENTER_CITY_COORDINATES[city]['center_lon']
         },
-        mapbox_zoom=9.5,
+        mapbox_zoom=10,
         margin={"r": 0, "t": 0, "l": 0, "b": 0}
     )
     return fig_hex_map
@@ -234,7 +234,7 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
         cat_variable = True
 
     if city == constants.BOGOTA_STR:
-        zoom = 9.5
+        zoom = 10
 
     if city == constants.CUENCA_STR:
         zoom = 11.5
@@ -251,11 +251,13 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
             colorbar['ticktext'] = constants.INDIACCE_TICKTEXT
             colorbar['title'] = '<b>Accesibilidad</b><br> .'
             colorscale = constants.INDIACCE_COLORSCALE
+            colorbar['tickmode'] = 'array'
         if variable == constants.CATEGORICAL_VARIABLES[1]:
             z = df[variable].map(constants.NSE_5_DICTMAP).values
             colorbar['tickvals'] = constants.NS5_TICKVALS
             colorbar['ticktext'] = constants.NS5_TICKTEXT
             colorbar['title'] = '<b>Nivel socio<br>económico</b><br> .'
+            colorbar['tickmode'] = 'array'
     else:
         z = df[variable]
         z_city = df[df.city == city][variable]
@@ -267,9 +269,6 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
         colorbar = constants.CATEGORICAL_COLORBAR
         colorbar['title'] = f'<b>{title}</b><br> .'
         colorbar['tickmode'] = 'auto'
-        # zmin = min(z_city),
-        # zmin = zmin[0]
-        # zmin = df[variable].quantile(0.9)
         zmin = z_city.quantile(0.0)
         zmax = z_city.quantile(0.9)
 
@@ -855,8 +854,10 @@ def update_output_div(city,
             ]
         return (dash.no_update,
                 dash.no_update,
-                dash.no_update,
-                dash.no_update,
+                update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable,
+                               population=below_graph_selected_value),
+                get_bar_figure(
+                    population=below_graph_selected_value, city=city, variable=variable),
                 dash.no_update,
                 dash.no_update,
                 options)
