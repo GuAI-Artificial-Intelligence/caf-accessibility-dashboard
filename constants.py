@@ -576,3 +576,8 @@ VARIABLE_OPTIONS_FOOT = [
     {'label': 'Educación (Secundaria): Tiempo (min)',
      'value': 'avg_duration_secondary_education_foot_walking'},
 ]
+
+
+HIDE_SHOW_BOTTOM_GRAPH_PANEL = "hide-show-bottom-graph-panel"
+BOTTOM_GRAPH_PANEL = "bottom-graph-panel"
+MAP_PANEL = "map-panel"

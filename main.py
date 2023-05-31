@@ -85,8 +85,9 @@ def add_infraestructure_trace(fig, trace):
             lon=hospitales_geo.lon,
             mode="markers",
             marker=dict(
-                size=5,
-                color="#023e8a"
+                size=10,
+                color="#023e8a",
+                symbol="hospital"
             ),
             name=constants.HOSPITAL_TRACE_NAME,
             customdata=hospitales_df[['nombre']],
@@ -99,8 +100,9 @@ def add_infraestructure_trace(fig, trace):
             lon=primary_health_care_geo.lon,
             mode="markers",
             marker=dict(
-                size=5,
-                color="#0077b6"
+                size=10,
+                color="#0077b6",
+                symbol="hospital"
             ),
             name=constants.ATENCION_PRIMARIA_TRACE_NAME,
             customdata=primary_health_care_df[['nombre']],
@@ -113,8 +115,9 @@ def add_infraestructure_trace(fig, trace):
             lon=early_education_geo.lon,
             mode="markers",
             marker=dict(
-                size=5,
-                color="#9d4edd"
+                size=10,
+                # color="#9d4edd",
+                symbol="college"
             ),
             name=constants.EARLY_EDUCATION_TRACENAME,
             customdata=early_education_df[['nombre', 'oferta']],
@@ -127,8 +130,9 @@ def add_infraestructure_trace(fig, trace):
             lon=primary_education_geo.lon,
             mode="markers",
             marker=dict(
-                size=5,
-                color="#7b2cbf"
+                size=10,
+                # color="#7b2cbf"
+                symbol="college"
             ),
             name=constants.PRIMARY_EDUCATION_TRACENAME,
             customdata=primary_education_df[['nombre', 'oferta']],
@@ -141,8 +145,9 @@ def add_infraestructure_trace(fig, trace):
             lon=secondary_education_geo.lon,
             mode="markers",
             marker=dict(
-                size=5,
-                color="#5a189a"
+                size=10,
+                # color="#5a189a",
+                symbol="college"
             ),
             name=constants.SECONDARY_EDUCATION_TRACENAME,
             customdata=secondary_education_df[['nombre', 'oferta']],
@@ -680,7 +685,7 @@ below_graph_control_panel = [
                 }
             ),
         ],
-        id="hide-show-bottom-graph-panel",
+        id=constants.HIDE_SHOW_BOTTOM_GRAPH_PANEL,
         style={
             "background-color": "rgb(30,30,30)",
             "color": "white",
@@ -726,9 +731,9 @@ app.layout = html.Div(
                             children=[
                                 html.Div(
                                     children=map_layout,
-                                    id='map-panel',
+                                    id=constants.MAP_PANEL,
                                     style={"width": "100%",
-                                           "height": "60vh", },
+                                           "height": "95vh", },
                                 ),
 
                                 html.Div(
@@ -742,9 +747,9 @@ app.layout = html.Div(
                                 ),
                                 html.Div(
                                     children=bottom_graph_layout,
-                                    id='bottom-graph-panel',
+                                    id=constants.BOTTOM_GRAPH_PANEL,
                                     style={"width": "100%",
-                                           "display": "flex", "height": "35vh"},
+                                           "display": "none", "height": "0vh"},
                                 ),]
                         )
 
@@ -767,20 +772,20 @@ app.layout = html.Div(
 
 @app.callback(
     [
-        Output('map-panel', 'style'),
-        Output('bottom-graph-panel', 'style'),
+        Output(constants.MAP_PANEL, 'style'),
+        Output(constants.BOTTOM_GRAPH_PANEL, 'style'),
     ],
     [
-        Input('hide-show-bottom-graph-panel', 'n_clicks')
+        Input(constants.HIDE_SHOW_BOTTOM_GRAPH_PANEL, 'n_clicks')
     ]
 )
 def hide_show_left_panel(n_clicks):
     if n_clicks is None:
         return dash.no_update, dash.no_update
     if n_clicks % 2 == 0:
-        return {"width": "100%", "height": "60vh", }, {"width": "100%", "height": "35vh", "display": "flex"}
-    else:
         return {"width": "100%", "height": "95vh", }, {"width": "100%", "height": "0vh", "display": "none"}
+    else:
+        return {"width": "100%", "height": "60vh", }, {"width": "100%", "height": "35vh", "display": "flex"}
 
 
 @app.callback(
@@ -850,7 +855,8 @@ def update_output_div(city,
             ]
         if city == "Cuenca":
             options = [
-                {"label": constants.POPULATION_TYPES["TOT_POB"], "value": "TOT_POB"}
+                {"label": constants.POPULATION_TYPES["TOT_POB"],
+                    "value": "TOT_POB"}
             ]
         return (dash.no_update,
                 dash.no_update,
@@ -861,7 +867,6 @@ def update_output_div(city,
                 dash.no_update,
                 dash.no_update,
                 options)
-
 
     transport_mode_disabled = False
 
