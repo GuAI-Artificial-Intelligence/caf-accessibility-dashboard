@@ -48,10 +48,10 @@ TRANSPORT_MODES = ['Todos', 'A pie', 'Bicicleta', 'Carro']
 
 POPULATION_TYPES = {
     'TOT_POB': 'Toda la poblacion',
-    'PEATON': 'Peatones',
     'BICIUSUARIO': 'Biciusuarios',
-    'MUJERES': 'Mujeres',
     'MOVILIDAD_CUIDADO': 'Dificultad para moverse',
+    'PEATON': 'Peatones',
+    # 'MUJERES': 'Mujeres',
     # 'DIFIC_BICI': 'Dificultad para usar bicicleta',
     # 'DIFIC_AUTO': 'Dificultad para usar automóvil',
     # 'DIFIC_BUS': 'Dificultad para usar bus/microbús',
