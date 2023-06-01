@@ -212,3 +212,14 @@ a {
   #below-graph-control-panel .Select-menu-outer {
     margin-left: 16px;
   }
+
+  ::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 15px;
+    background-color: #1e1e1e;
+  
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: lightgray;
+    width: 15px;
+  }

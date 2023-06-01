@@ -234,6 +234,21 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
     lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
     lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
 
+    # ++++++++++++++++++++++++++++++++++
+
+    df["temp"] = 1
+    density_mapbox = go.Densitymapbox(
+        # Specify latitude values
+        lat=df.x,
+        # Specify longitude values
+        lon=df.y,
+        z=df["temp"].values,  # Specify the intensity or weight of each data point
+        radius=10,
+        colorbar=dict(
+            title='Intensity'
+        )
+    )
+
     cat_variable = False
     if variable in constants.CATEGORICAL_VARIABLES:
         cat_variable = True
@@ -294,6 +309,11 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
         },
         mapbox_zoom=zoom,
     )
+
+    print(df.x)
+    # ++++++++++++++++++++++++++++++++++
+    # figure = go.Figure(data=[density_mapbox])
+    # return figure
 
     return fig_hex_map
 
@@ -433,9 +453,20 @@ app.title = 'CAF - Accesibilidad'
 
 
 left_panel_content = [
+
+    html.Img(
+        src='assets/images/caf_tumi_numo_logos.png',
+        style={
+            'width': "calc(100%)",
+            'margin-left': '-24px',
+            'bottom': '0',
+            "position": 'absolute',
+        }
+    ),
+
     html.P('Accesibilidad en Bogotá y Cuenca',
            className='card-subtitle',
-           style={'margin-bottom': '26px',
+           style={'margin-bottom': '16px', 'margin-top': '26px',
                   'font-weight': 'bold', 'font-size': '14px'}
            ),
     html.H5("¿Cómo es la accesibilidad en la ciudad según el tipo de usuario?",
@@ -457,7 +488,7 @@ left_panel_content = [
             constants.CENTER_CITY_COORDINATES.keys())[0],
         id=constants.CITY_SELECTOR,
         clearable=False,
-        style={'margin-bottom': '24px', }
+        style={'margin-bottom': '10px', }
     ),
 
     html.H6('¿Qué desea ver?'),
@@ -517,10 +548,24 @@ left_panel_content = [
              'value': constants.ESPACIOS_VERDES_TRACE_NAME},
         ],
         clearable=False,
-        style={'margin-bottom': '50px', },
+        style={'margin-bottom': '10px', },
         id=constants.INFRA_CHECKLIST_ID,
         value=constants.NONE_TRACE_NAME,
     ),
+
+    html.H6(
+        'Seleccione un tipo de población:'),
+    dcc.Dropdown(
+        id=constants.BELOW_TABS,
+        options=[
+            {"label": constants.POPULATION_TYPES[value], "value": value} for value in constants.POPULATION_TYPES
+        ],
+        value=list(constants.POPULATION_TYPES.keys())[0],
+        clearable=False,
+    ),
+
+
+
     dbc.Modal(
         [
             dbc.ModalHeader(
@@ -558,15 +603,7 @@ left_panel_content = [
     ),
 
 
-    html.Img(
-        src='assets/images/caf_tumi_numo_logos.png',
-        style={
-            'width': "calc(100%)",
-            'margin-left': '-24px',
-            'bottom': '0px',
-            "position": 'absolute',
-        }
-    ),
+
 ]
 
 map_layout = [
@@ -652,28 +689,32 @@ selector_panel_layout = [
     )
 ]
 
+
 below_graph_control_panel = [
-    html.Div(
-        id="below-graph-control-panel",
-        children=[
-            dcc.Dropdown(
-                id=constants.BELOW_TABS,
-                options=[
-                    {"label": constants.POPULATION_TYPES[value], "value": value} for value in constants.POPULATION_TYPES
-                ],
-                value=list(constants.POPULATION_TYPES.keys())[0],
-                clearable=False,
-                style={
-                    "width": "calc(300px)",
-                    "margin-left": "16px"
-                }
-            ),
-        ]
+    # TODO
+    # TODO
+    # TODO
+    # html.Div(
+    #     id="below-graph-control-panel",
+    #     children=[
+    #         dcc.Dropdown(
+    #             id=constants.BELOW_TABS,
+    #             options=[
+    #                 {"label": constants.POPULATION_TYPES[value], "value": value} for value in constants.POPULATION_TYPES
+    #             ],
+    #             value=list(constants.POPULATION_TYPES.keys())[0],
+    #             clearable=False,
+    #             style={
+    #                 "width": "calc(300px)",
+    #                 "margin-left": "16px",
+    #             }
+    #         ),
+    #     ]
+    # ),
+    # TODO
+    # TODO
+    # TODO
 
-
-
-
-    ),
 
     dbc.Button(
         children=[
@@ -719,11 +760,13 @@ app.layout = html.Div(
                 html.Div(
                     children=left_panel_content,
                     style={"width": "30%", "height": "100vh",
-                           "padding": "24px 40px 0px 24px", "position": "relative"},
+                           "padding": "24px 30px 0px 30px", "position": "relative",
+                           'overflow': 'scroll',
+                           'overflowX': 'hidden',
+                           },
                     id='left-panel',
                     className='panel-control-content'
                 ),
-
 
                 html.Div(
                     children=[
@@ -733,13 +776,13 @@ app.layout = html.Div(
                                     children=map_layout,
                                     id=constants.MAP_PANEL,
                                     style={"width": "100%",
-                                           "height": "95vh", },
+                                           "height": "96vh", },
                                 ),
 
                                 html.Div(
                                     children=below_graph_control_panel,
                                     style={
-                                        "width": "100%", "height": "5vh",
+                                        "width": "100%", "height": "4vh",
                                         "background-color": "rgb(30, 30, 30)",
                                         "display": "flex",
                                         "align-items": "center",
@@ -783,7 +826,7 @@ def hide_show_left_panel(n_clicks):
     if n_clicks is None:
         return dash.no_update, dash.no_update
     if n_clicks % 2 == 0:
-        return {"width": "100%", "height": "95vh", }, {"width": "100%", "height": "0vh", "display": "none"}
+        return {"width": "100%", "height": "96vh", }, {"width": "100%", "height": "0vh", "display": "none"}
     else:
         return {"width": "100%", "height": "60vh", }, {"width": "100%", "height": "35vh", "display": "flex"}
 
@@ -802,8 +845,8 @@ def hide_show_left_panel(n_clicks):
         return dash.no_update, dash.no_update
 
     if n_clicks % 2 == 0:
-        return {"width": "30%", "height": "100vh", "padding": "24px 40px 0px 24px", "display": "flex", "position": "relative"}, {"width": "68%", "height": "100vh",
-                                                                                                                                 "background-color": "#323232"}
+        return {'overflow': 'scroll', "width": "30%", "height": "100vh", "padding": "24px 40px 0px 24px", "display": "flex", "position": "relative"}, {"width": "68%", "height": "100vh",
+                                                                                                                                                       "background-color": "#323232"}
     else:
         return {"width": "0%", "height": "100vh", "padding": "0px", "display": "none"}, {"width": "98%", "height": "100vh",
                                                                                          "background-color": "#323232"}
