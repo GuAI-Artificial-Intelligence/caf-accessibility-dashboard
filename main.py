@@ -36,6 +36,9 @@ from conf.credentials import MAPBOX_TOKEN
 
 current_path = Path()
 
+
+# Data loading
+
 accessibility_df, accessibility_geo = db.get_dataframe_from_sqlite_db(
     table_name='Accessibility', conn=db.conn)
 
@@ -44,7 +47,6 @@ accessibility_df, accessibility_geo = db.get_dataframe_from_sqlite_db(
 # TODO
 accessibility_df = gpd.read_file("temp_accesibilidad.geojson")
 accessibility_geo = accessibility_df[["geometry"]].__geo_interface__
-# TODO
 # TODO
 # TODO
 
@@ -72,12 +74,79 @@ secondary_education_df, secondary_education_geo = db.get_dataframe_from_sqlite_d
     table_name='Early_Education', conn=db.conn, geo_type='point')
 
 
+# State variables
+is_infra_trace_selected = False
+is_population_trace_selected = False
+
+
+def add_poblation_trace(fig, trace):
+    # TODO
+    # TODO
+    # TODO
+    # TODO
+    # TODO
+    # TODO
+    # TODO
+
+    global is_population_trace_selected
+    global is_infra_trace_selected
+
+    if is_infra_trace_selected:
+        fig.data = fig.data[0:2]
+    else:
+        fig.data = fig.data[0:1]
+
+    if trace == constants.TOT_POB_TRACE_NAME:
+        is_population_trace_selected = False
+        return fig
+
+    is_population_trace_selected = True
+
+    colorbar = constants.POPULATION_COLORBAR
+
+    if trace == constants.BICIUSUARIO_TRACE_NAME:
+        colorbar['title'] = '<b>Biciusuarios</b><br> .'
+        var="bicicleta"
+
+    if trace == constants.PEATON_TRACE_NAME:
+        colorbar['title'] = '<b>Peatones<br> .'
+        var="peaton"
+
+    if trace == constants.MOVILIDAD_CUIDADO_TRACE_NAME:
+        colorbar['title'] = '<b>Personas<br>con dificultad<br>para moverse<br> .'
+        var="movilidad_cuidado"
+
+    trace = go.Densitymapbox(
+        lat=accessibility_df.y,
+        lon=accessibility_df.x,
+        z=accessibility_df[var],
+        name=constants.BICIUSUARIO_TRACE_NAME,
+        radius=20,
+        colorscale="Viridis",
+        colorbar=colorbar,
+        hoverinfo='skip'
+    )
+
+    fig = fig.add_trace(trace)
+
+    return fig
+
+
 def add_infraestructure_trace(fig, trace):
 
-    fig.data = fig.data[0:1]
+    global is_population_trace_selected
+    global is_infra_trace_selected
+
+    if is_population_trace_selected:
+        fig.data = fig.data[0:2]
+    else:
+        fig.data = fig.data[0:1]
 
     if trace == constants.NONE_TRACE_NAME:
+        is_infra_trace_selected = False
         return fig
+
+    is_infra_trace_selected = True
 
     if trace == constants.HOSPITAL_TRACE_NAME:
         trace = go.Scattermapbox(
@@ -218,36 +287,21 @@ def init_map(df=accessibility_df, geodf=accessibility_geo,
 def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0],
                    df=accessibility_df, filter={'all': True}, population="TOT_POB"):
 
-    if not filter['all']:
-        dfs = list()
-        for nse in filter['selected']:
-            mask = df[constants.CATEGORICAL_VARIABLES[1]] == nse
-            mask = mask & df[constants.CATEGORICAL_VARIABLES[0]].isin(
-                filter['selected'][nse])
-            temp_df = df[mask]
-            dfs.append(temp_df)
-        df = pd.concat(dfs).copy()
+    # if not filter['all']:
+    #     dfs = list()
+    #     for nse in filter['selected']:
+    #         mask = df[constants.CATEGORICAL_VARIABLES[1]] == nse
+    #         mask = mask & df[constants.CATEGORICAL_VARIABLES[0]].isin(
+    #             filter['selected'][nse])
+    #         temp_df = df[mask]
+    #         dfs.append(temp_df)
+    #     df = pd.concat(dfs).copy()
 
-    if not population == "TOT_POB":
-        df = df[df[constants.MAP_BELOW_TAB_ACCESSIBILITY[population]] > 0].copy()
+    # if not population == constants.TOT_POB_TRACE_NAME:
+    #     df = df[df[constants.MAP_BELOW_TAB_ACCESSIBILITY[population]] > 0].copy()
 
     lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
     lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
-
-    # ++++++++++++++++++++++++++++++++++
-
-    df["temp"] = 1
-    density_mapbox = go.Densitymapbox(
-        # Specify latitude values
-        lat=df.x,
-        # Specify longitude values
-        lon=df.y,
-        z=df["temp"].values,  # Specify the intensity or weight of each data point
-        radius=10,
-        colorbar=dict(
-            title='Intensity'
-        )
-    )
 
     cat_variable = False
     if variable in constants.CATEGORICAL_VARIABLES:
@@ -309,11 +363,6 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
         },
         mapbox_zoom=zoom,
     )
-
-    print(df.x)
-    # ++++++++++++++++++++++++++++++++++
-    # figure = go.Figure(data=[density_mapbox])
-    # return figure
 
     return fig_hex_map
 
@@ -531,36 +580,22 @@ left_panel_content = [
     html.H6(
         '¿Qué establecimientos desea ver?'),
     dcc.Dropdown(
-        options=[
-            {'label': 'Ninguno',
-             'value': constants.NONE_TRACE_NAME},
-            {'label': 'Salud (Atención primaria)',
-             'value': constants.ATENCION_PRIMARIA_TRACE_NAME},
-            {'label': 'Salud (Hospitales)',
-             'value': constants.HOSPITAL_TRACE_NAME},
-            {'label': 'Educación (Inicial)',
-             'value': constants.EARLY_EDUCATION_TRACENAME},
-            {'label': 'Educación (Primaria)',
-             'value': constants.PRIMARY_EDUCATION_TRACENAME},
-            {'label': 'Educación (Secundaria)',
-             'value': constants.SECONDARY_EDUCATION_TRACENAME},
-            {'label': 'Espacios verdes',
-             'value': constants.ESPACIOS_VERDES_TRACE_NAME},
-        ],
+        id=constants.INFRA_SELECTOR,
+        options=constants.INFRA_TYPES,
         clearable=False,
         style={'margin-bottom': '10px', },
-        id=constants.INFRA_CHECKLIST_ID,
         value=constants.NONE_TRACE_NAME,
     ),
 
     html.H6(
         'Seleccione un tipo de población:'),
     dcc.Dropdown(
-        id=constants.BELOW_TABS,
-        options=[
-            {"label": constants.POPULATION_TYPES[value], "value": value} for value in constants.POPULATION_TYPES
-        ],
-        value=list(constants.POPULATION_TYPES.keys())[0],
+        id=constants.POPULATION_TYPE_SELECTOR,
+        # options=[
+        #     {"label": constants.POPULATION_TYPES[value], "value": value} for value in constants.POPULATION_TYPES
+        # ],
+        options=constants.POPULATION_TYPES,
+        value=constants.TOT_POB_TRACE_NAME,
         clearable=False,
     ),
 
@@ -863,7 +898,7 @@ def hide_show_left_panel(n_clicks):
                component_property='figure'),
         Output(constants.TRANSPORT_MODE_SELECTOR, 'disabled'),
         Output(constants.TRANSPORT_MODE_SELECTOR, 'value'),
-        Output(constants.BELOW_TABS, 'options')
+        Output(constants.POPULATION_TYPE_SELECTOR, 'options')
     ],
 
     [
@@ -873,9 +908,9 @@ def hide_show_left_panel(n_clicks):
         Input(component_id=constants.VARIABLE_SELECTOR,
               component_property='value'),
         Input(constants.BELOW_GRAPH_ID, 'selectedData'),
-        Input(constants.BELOW_TABS, 'value'),
+        Input(constants.POPULATION_TYPE_SELECTOR, 'value'),
         Input(constants.TRANSPORT_MODE_SELECTOR, 'value'),
-        Input(constants.INFRA_CHECKLIST_ID, 'value'),
+        Input(constants.INFRA_SELECTOR, 'value'),
     ],
 
 )
@@ -883,7 +918,7 @@ def update_output_div(city,
                       category,
                       variable,
                       below_graph_selected_data,
-                      below_graph_selected_value,
+                      population_type_selection,
                       transport_mode_selection,
                       infra_selection):
     triggered_input = ctx.triggered_id
@@ -904,28 +939,47 @@ def update_output_div(city,
         return (dash.no_update,
                 dash.no_update,
                 update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable,
-                               population=below_graph_selected_value),
+                               population=population_type_selection),
                 get_bar_figure(
-                    population=below_graph_selected_value, city=city, variable=variable),
+                    population=population_type_selection, city=city, variable=variable),
                 dash.no_update,
                 dash.no_update,
                 options)
 
     transport_mode_disabled = False
 
-    if triggered_input == constants.BELOW_TABS:
+    if triggered_input == constants.POPULATION_TYPE_SELECTOR:
+        # TODO
+        # TODO
+        # TODO
+        # TODO
+        # TODO
+        # TODO
+        # TODO
+
+        map_fig = add_poblation_trace(
+            fig=fig_hex_map, trace=population_type_selection)
 
         return (dash.no_update,
                 dash.no_update,
-                update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable,
-                               population=below_graph_selected_value),
-                get_bar_figure(
-                    population=below_graph_selected_value, city=city, variable=variable),
+                map_fig,
+                dash.no_update,
                 transport_mode_disabled,
                 dash.no_update,
                 dash.no_update)
 
-    if triggered_input == constants.INFRA_CHECKLIST_ID:
+        # return (dash.no_update,
+        #         dash.no_update,
+        #         update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable,
+        #                        population=population_type_selection),
+        #         get_bar_figure(
+        #             population=population_type_selection, city=city, variable=variable),
+        #         transport_mode_disabled,
+        #         dash.no_update,
+        #         dash.no_update)
+
+    if triggered_input == constants.INFRA_SELECTOR:
+
         map_fig = add_infraestructure_trace(fig_hex_map, infra_selection)
 
         return (dash.no_update,
@@ -977,13 +1031,13 @@ def update_output_div(city,
             nse_selection = {
                 'all': True,
             }
-        # print(nse_selection)
+
         return (dash.no_update,
                 dash.no_update,
                 update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable, filter=nse_selection,
-                               population=below_graph_selected_value),
+                               population=population_type_selection),
                 get_bar_figure(
-                    population=below_graph_selected_value, city=city, variable=variable),
+                    population=population_type_selection, city=city, variable=variable),
                 transport_mode_disabled,
                 dash.no_update,
                 dash.no_update)
@@ -1002,8 +1056,8 @@ def update_output_div(city,
         return (variable_options,
                 variable,
                 update_hex_map(city=city, fig_hex_map=fig_hex_map,
-                               variable=variable, population=below_graph_selected_value),
-                get_bar_figure(population=below_graph_selected_value,
+                               variable=variable, population=population_type_selection),
+                get_bar_figure(population=population_type_selection,
                                city=city, variable=variable),
                 transport_mode_disabled,
                 constants.TRANSPORT_MODES[0],
@@ -1031,8 +1085,8 @@ def update_output_div(city,
         return (variable_options,
                 variable,
                 update_hex_map(city=city, fig_hex_map=fig_hex_map,
-                               variable=variable, population=below_graph_selected_value),
-                get_bar_figure(population=below_graph_selected_value,
+                               variable=variable, population=population_type_selection),
+                get_bar_figure(population=population_type_selection,
                                city=city, variable=variable),
                 transport_mode_disabled,
                 dash.no_update,
@@ -1041,8 +1095,8 @@ def update_output_div(city,
     return (dash.no_update,
             dash.no_update,
             update_hex_map(city=city, fig_hex_map=fig_hex_map,
-                           variable=variable, population=below_graph_selected_value),
-            get_bar_figure(population=below_graph_selected_value,
+                           variable=variable, population=population_type_selection),
+            get_bar_figure(population=population_type_selection,
                            city=city, variable=variable),
             transport_mode_disabled,
             dash.no_update,
