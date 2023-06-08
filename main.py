@@ -106,15 +106,15 @@ def add_poblation_trace(fig, trace):
 
     if trace == constants.BICIUSUARIO_TRACE_NAME:
         colorbar['title'] = '<b>Biciusuarios</b><br> .'
-        var="bicicleta"
+        var = "bicicleta"
 
     if trace == constants.PEATON_TRACE_NAME:
         colorbar['title'] = '<b>Peatones<br> .'
-        var="peaton"
+        var = "peaton"
 
     if trace == constants.MOVILIDAD_CUIDADO_TRACE_NAME:
         colorbar['title'] = '<b>Personas<br>con dificultad<br>para moverse<br> .'
-        var="movilidad_cuidado"
+        var = "movilidad_cuidado"
 
     trace = go.Densitymapbox(
         lat=accessibility_df.y,
@@ -287,18 +287,18 @@ def init_map(df=accessibility_df, geodf=accessibility_geo,
 def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0],
                    df=accessibility_df, filter={'all': True}, population="TOT_POB"):
 
-    # if not filter['all']:
-    #     dfs = list()
-    #     for nse in filter['selected']:
-    #         mask = df[constants.CATEGORICAL_VARIABLES[1]] == nse
-    #         mask = mask & df[constants.CATEGORICAL_VARIABLES[0]].isin(
-    #             filter['selected'][nse])
-    #         temp_df = df[mask]
-    #         dfs.append(temp_df)
-    #     df = pd.concat(dfs).copy()
+    if not filter['all']:
+        dfs = list()
+        for nse in filter['selected']:
+            mask = df[constants.CATEGORICAL_VARIABLES[1]] == nse
+            mask = mask & df[constants.CATEGORICAL_VARIABLES[0]].isin(
+                filter['selected'][nse])
+            temp_df = df[mask]
+            dfs.append(temp_df)
+        df = pd.concat(dfs).copy()
 
-    # if not population == constants.TOT_POB_TRACE_NAME:
-    #     df = df[df[constants.MAP_BELOW_TAB_ACCESSIBILITY[population]] > 0].copy()
+    if (not population == constants.TOT_POB_TRACE_NAME) and (not filter["all"]):
+        df = df[df[constants.MAP_BELOW_TAB_ACCESSIBILITY[population]] > 0].copy()
 
     lat = constants.CENTER_CITY_COORDINATES[city]['center_lat']
     lon = constants.CENTER_CITY_COORDINATES[city]['center_lon']
@@ -367,16 +367,14 @@ def update_hex_map(city, fig_hex_map, variable=constants.CATEGORICAL_VARIABLES[0
     return fig_hex_map
 
 
-def get_bar_figure(population=None, city="Bogotá", variable=constants.CATEGORICAL_VARIABLES[0]):
+def get_bar_figure(fig_below_map=None, init=False, population=None, city="Bogotá", variable=constants.CATEGORICAL_VARIABLES[0]):
 
-    global fig_below_map
-
-    fig_below_map = go.Figure()
+    if init:
+        fig_below_map = go.Figure()
 
     if population is None:
         population = list(constants.POPULATION_TYPES.keys())[0]
         population_column = constants.MAP_BELOW_TAB_ACCESSIBILITY[population]
-
     else:
         population_column = constants.MAP_BELOW_TAB_ACCESSIBILITY[population]
 
@@ -384,7 +382,6 @@ def get_bar_figure(population=None, city="Bogotá", variable=constants.CATEGORIC
 
     df = accessibility_df[accessibility_df.city == city]
 
-    # ----------------- Start Bar Plot -----------------#
     if variable in constants.CATEGORICAL_VARIABLES:
 
         y1 = df[df[constants.CATEGORICAL_VARIABLES[0]] == '1. Alta'][[
@@ -431,7 +428,6 @@ def get_bar_figure(population=None, city="Bogotá", variable=constants.CATEGORIC
             ),
             dragmode='select',
         )
-    # ----------------- End Bar Plot-----------------#
     else:
 
         y1 = df[df.NSE_5 ==
@@ -486,7 +482,7 @@ def get_bar_figure(population=None, city="Bogotá", variable=constants.CATEGORIC
 
 
 fig_hex_map = init_map()
-fig_below_map = go.Figure()
+fig_below_map = get_bar_figure(init=True)
 
 
 # Create a Dash app
@@ -662,8 +658,8 @@ bottom_graph_layout = [
     html.Div(
         children=[
             dcc.Graph(
-                id=constants.BELOW_GRAPH_ID,
-                figure=get_bar_figure(),
+                id=constants.BELOW_GRAPH,
+                figure=fig_below_map,
                 config={
                     'displayModeBar': False
                 },
@@ -894,7 +890,7 @@ def hide_show_left_panel(n_clicks):
         Output(component_id=constants.VARIABLE_SELECTOR,
                component_property='value'),
         Output(component_id=constants.MAP_ID, component_property='figure'),
-        Output(component_id=constants.BELOW_GRAPH_ID,
+        Output(component_id=constants.BELOW_GRAPH,
                component_property='figure'),
         Output(constants.TRANSPORT_MODE_SELECTOR, 'disabled'),
         Output(constants.TRANSPORT_MODE_SELECTOR, 'value'),
@@ -907,7 +903,7 @@ def hide_show_left_panel(n_clicks):
               component_property='value'),
         Input(component_id=constants.VARIABLE_SELECTOR,
               component_property='value'),
-        Input(constants.BELOW_GRAPH_ID, 'selectedData'),
+        Input(constants.BELOW_GRAPH, 'selectedData'),
         Input(constants.POPULATION_TYPE_SELECTOR, 'value'),
         Input(constants.TRANSPORT_MODE_SELECTOR, 'value'),
         Input(constants.INFRA_SELECTOR, 'value'),
@@ -941,7 +937,7 @@ def update_output_div(city,
                 update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable,
                                population=population_type_selection),
                 get_bar_figure(
-                    population=population_type_selection, city=city, variable=variable),
+                    fig_below_map=fig_below_map,population=population_type_selection, city=city, variable=variable),
                 dash.no_update,
                 dash.no_update,
                 options)
@@ -949,34 +945,20 @@ def update_output_div(city,
     transport_mode_disabled = False
 
     if triggered_input == constants.POPULATION_TYPE_SELECTOR:
-        # TODO
-        # TODO
-        # TODO
-        # TODO
-        # TODO
-        # TODO
-        # TODO
 
         map_fig = add_poblation_trace(
             fig=fig_hex_map, trace=population_type_selection)
 
+        bar_graph = get_bar_figure(
+            fig_below_map=fig_below_map,population=population_type_selection, city=city, variable=variable)
+
         return (dash.no_update,
                 dash.no_update,
                 map_fig,
-                dash.no_update,
+                bar_graph,
                 transport_mode_disabled,
                 dash.no_update,
                 dash.no_update)
-
-        # return (dash.no_update,
-        #         dash.no_update,
-        #         update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable,
-        #                        population=population_type_selection),
-        #         get_bar_figure(
-        #             population=population_type_selection, city=city, variable=variable),
-        #         transport_mode_disabled,
-        #         dash.no_update,
-        #         dash.no_update)
 
     if triggered_input == constants.INFRA_SELECTOR:
 
@@ -990,9 +972,14 @@ def update_output_div(city,
                 dash.no_update,
                 dash.no_update)
 
-    if (triggered_input == constants.BELOW_GRAPH_ID):
+    if (triggered_input == constants.BELOW_GRAPH):
 
-        if (len(below_graph_selected_data["points"]) > 0):
+        if below_graph_selected_data is None:
+            nse_selection = {
+                'all': True,
+            }
+
+        elif (len(below_graph_selected_data["points"]) > 0):
             nse_selection = {
                 'all': False,
                 'selected': dict()
@@ -1000,6 +987,7 @@ def update_output_div(city,
             if transport_mode_selection == constants.TRANSPORT_MODES[0]:
 
                 for selection in below_graph_selected_data['points']:
+
                     accesibilidad = fig_below_map['data'][selection['curveNumber']]['name']
                     nse = selection['x']
                     if nse not in nse_selection['selected']:
@@ -1022,9 +1010,6 @@ def update_output_div(city,
                     nse_selection['selected'][nse] = {
                         '1. Alta', '2. Media Alta', '3. Media Baja', '4. Baja'}
 
-        # TODO:
-        # After selecting some data in the bellow graph, how can I return to the whole data selection
-
         elif len(below_graph_selected_data["points"]) == 0:
             raise PreventUpdate
         else:
@@ -1037,7 +1022,7 @@ def update_output_div(city,
                 update_hex_map(city=city, fig_hex_map=fig_hex_map, variable=variable, filter=nse_selection,
                                population=population_type_selection),
                 get_bar_figure(
-                    population=population_type_selection, city=city, variable=variable),
+                    fig_below_map=fig_below_map,population=population_type_selection, city=city, variable=variable),
                 transport_mode_disabled,
                 dash.no_update,
                 dash.no_update)
@@ -1086,7 +1071,7 @@ def update_output_div(city,
                 variable,
                 update_hex_map(city=city, fig_hex_map=fig_hex_map,
                                variable=variable, population=population_type_selection),
-                get_bar_figure(population=population_type_selection,
+                get_bar_figure(fig_below_map=fig_below_map,population=population_type_selection,
                                city=city, variable=variable),
                 transport_mode_disabled,
                 dash.no_update,
@@ -1096,7 +1081,7 @@ def update_output_div(city,
             dash.no_update,
             update_hex_map(city=city, fig_hex_map=fig_hex_map,
                            variable=variable, population=population_type_selection),
-            get_bar_figure(population=population_type_selection,
+            get_bar_figure(fig_below_map=fig_below_map,population=population_type_selection,
                            city=city, variable=variable),
             transport_mode_disabled,
             dash.no_update,

@@ -21,7 +21,7 @@ ACCESIBILITY_MEANS = {
 }
 
 # Components IDs
-BELOW_GRAPH_ID = "below-graph"
+BELOW_GRAPH = "below-graph"
 MAP_ID = 'my-map'
 CITY_SELECTOR = 'my-city-selector'
 ACCESIBILITY_SELECTOR = 'my-accesibility-selector'
